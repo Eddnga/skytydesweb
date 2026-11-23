@@ -7,6 +7,11 @@ page_hero(setting('about_title', 'About us'), 'Our story', val('SELECT image FRO
 ?>
 <section class="sec">
   <div class="wrap narrow prose big"><?= md(setting('about_body')) ?></div>
+  <?php $profile = row("SELECT * FROM documents WHERE active = 1 AND file IS NOT NULL ORDER BY (category = 'Company profile') DESC, featured DESC, sort LIMIT 1"); ?>
+  <div class="wrap narrow"><div class="profile-cta">
+    <div><?= sicon('file', 30) ?><span><b><?= $profile ? h($profile['title']) : 'Our company profile' ?></b><small><?= $profile ? 'Read it online or download a copy' : 'Rates, brochures and more' ?></small></span></div>
+    <?php if ($profile): ?><?= doc_buttons($profile) ?><?php else: ?><a class="btn dark sm" href="<?= url('documents.php') ?>">Brochures &amp; rates</a><?php endif; ?>
+  </div></div>
 </section>
 <?php if ($hosts = team_cards()): ?>
 <section class="sec" id="hosts"><div class="wrap"><div class="sec-head center"><div><p class="eyebrow">Your hosts</p><h2 class="h2">The people behind <em>SkyTydes</em></h2></div></div><?= $hosts ?></div></section>

@@ -26,7 +26,10 @@ if (is_post()) {
     if ($action === 'delete' && $id) {
         $rec = row("SELECT * FROM $T WHERE id = ?", [$id]);
         if ($rec) {
-            foreach ($E['fields'] as $f) if ($f[1] === 'image') delete_image($rec[$f[0]] ?? null);
+            foreach ($E['fields'] as $f) {
+                if ($f[1] === 'image') delete_image($rec[$f[0]] ?? null);
+                if ($f[1] === 'pdf') delete_document($rec[$f[0]] ?? null);
+            }
             if (!empty($E['itinerary'])) q('DELETE FROM itinerary_days WHERE tour_id = ?', [$id]);
             q("DELETE FROM $T WHERE id = ?", [$id]);
             audit('delete', $T, $id);
@@ -95,6 +98,19 @@ if (is_post()) {
                     $v = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $raw) ? $raw . ' 09:00:00' : now(); break;
                 case 'date_opt':
                     $v = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $raw) ? $raw . (!empty($o['end']) ? ' 23:59:59' : ' 00:00:00') : null; break;
+                case 'pdf':
+                    $v = $rec[$name] ?? null;
+                    if (!empty($_FILES[$name]) && $_FILES[$name]['error'] !== UPLOAD_ERR_NO_FILE) {
+                        try {
+                            [$new, $size] = store_document($_FILES[$name]);
+                            delete_document($v);
+                            $v = $new;
+                            $data['file_size'] = $size;
+                        } catch (RuntimeException $e) {
+                            $errors[] = $label . ': ' . $e->getMessage();
+                        }
+                    }
+                    break;
                 case 'image':
                     $v = $rec[$name] ?? null;
                     if (!empty($_FILES[$name]) && $_FILES[$name]['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -164,6 +180,8 @@ function list_cell(string $col, array $r, array $E): string
     if ($col === 'image') return '<img class="thumb" src="' . h(upload_url($v, 'sm')) . '" alt="">';
     if (in_array($col, ['active', 'published'], true)) return $v ? '<span class="pill ok">Live</span>' : '<span class="pill">Hidden</span>';
     if ($col === 'featured') return $v ? '<span class="pill gold">Featured</span>' : '';
+    if ($col === 'access') return $v === 'request' ? '<span class="pill gold">On request</span>' : '<span class="pill ok">Public</span>';
+    if ($col === 'downloads') return (int) $v . '×';
     if ($col === 'destination_id') return h((string) val('SELECT name FROM destinations WHERE id = ?', [$v]));
     if ($col === 'price_from') return $v ? h(money($v, $r['currency'] ?? 'KES')) : '<span class="muted">On request</span>';
     if ($col === 'published_at') return h(fdate($v));
@@ -216,6 +234,12 @@ function edit_form(array $E, string $self, ?array $rec, ?array $old, int $id, bo
             <input id="f_<?= h($name) ?>" type="date" name="<?= h($name) ?>" value="<?= h($v ? substr((string) $v, 0, 10) : '') ?>">
           <?php elseif ($ftype === 'date'): ?>
             <input id="f_<?= h($name) ?>" type="date" name="<?= h($name) ?>" value="<?= h($v ? substr((string) $v, 0, 10) : date('Y-m-d')) ?>">
+          <?php elseif ($ftype === 'pdf'): $cur = $rec[$name] ?? null; ?>
+            <div class="pdffield">
+              <?php if ($cur): ?><p class="pdfcur"><?= icon('file', 18) ?> <a href="<?= h(url('doc.php?id=' . (int) $rec['id'])) ?>" target="_blank" rel="noopener">Open current PDF</a> <span class="muted small"><?= h(human_size((int) ($rec['file_size'] ?? 0))) ?></span></p><?php endif; ?>
+              <input id="f_<?= h($name) ?>" type="file" name="<?= h($name) ?>" accept="application/pdf"<?= (!empty($o['required']) && !$cur) ? ' required' : '' ?>>
+              <p class="hint">PDF only, up to 25 MB.<?= $cur ? ' Choose a new file to replace the current one.' : '' ?></p>
+            </div>
           <?php elseif ($ftype === 'image'): $cur = $rec[$name] ?? null; ?>
             <div class="imgfield">
               <img src="<?= h(upload_url($cur, 'sm')) ?>" alt="" class="preview" data-preview="f_<?= h($name) ?>">

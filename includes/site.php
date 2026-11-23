@@ -29,6 +29,8 @@ function sicon(string $n, int $s = 22): string
         'x' => '<path d="M4 4l16 16M20 4L4 20" stroke-width="2"/>',
         'youtube' => '<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/>',
         'linkedin' => '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
+        'file' => '<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
+        'download' => '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
         'insta' => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>',
         'fb' => '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/>',
         'tiktok' => '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3a5 5 0 0 0 5 5"/>',
@@ -117,6 +119,7 @@ function site_header(string $title, array $o = []): void
                   <a href="<?= url('about.php') ?>"><b>Our story</b><small>Who we are and how we plan</small></a>
                   <a href="<?= url('about.php#hosts') ?>"><b>Your hosts</b><small>Meet the people behind SkyTydes</small></a>
                   <a href="<?= url('services.php') ?>"><b>Services</b><small>Everything we can arrange for you</small></a>
+                  <a href="<?= url('documents.php') ?>"><b>Brochures &amp; rates</b><small>Company profile and downloads</small></a>
                   <a href="<?= url('faqs.php') ?>"><b>FAQs</b><small>Good to know before you travel</small></a>
                 </div>
               <?php endif; ?>
@@ -189,7 +192,7 @@ function site_footer(): void
       <p class="follow-h">Follow the tides</p>
       <?= social_links() ?>
     </div>
-    <div><h3>Explore</h3><ul><li><a href="<?= url('tours.php') ?>">Tour packages</a></li><li><a href="<?= url('destinations.php') ?>">Destinations</a></li><li><a href="<?= url('offers.php') ?>">Special offers</a></li><li><a href="<?= url('services.php') ?>">Services</a></li><li><a href="<?= url('gallery.php') ?>">Gallery</a></li><li><a href="<?= url('blog.php') ?>">Journal</a></li><li><a href="<?= url('faqs.php') ?>">FAQs</a></li></ul></div>
+    <div><h3>Explore</h3><ul><li><a href="<?= url('tours.php') ?>">Tour packages</a></li><li><a href="<?= url('destinations.php') ?>">Destinations</a></li><li><a href="<?= url('offers.php') ?>">Special offers</a></li><li><a href="<?= url('services.php') ?>">Services</a></li><li><a href="<?= url('gallery.php') ?>">Gallery</a></li><li><a href="<?= url('blog.php') ?>">Journal</a></li><li><a href="<?= url('documents.php') ?>">Brochures &amp; rates</a></li><li><a href="<?= url('faqs.php') ?>">FAQs</a></li></ul></div>
     <div><h3>Destinations</h3><ul><?php foreach ($dests as $d): ?><li><a href="<?= url('destination.php?slug=' . rawurlencode($d['slug'])) ?>"><?= h($d['name']) ?></a></li><?php endforeach; ?></ul></div>
     <div><h3>Contact</h3>
       <ul class="contact-list">
@@ -365,6 +368,29 @@ function office_map(): string
   </div>
   <iframe class="map" src="<?= h($embed) ?>" title="Map showing the SkyTydes Safaris office at <?= h($q) ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
 </div>
+<?php return ob_get_clean();
+}
+
+function doc_buttons(array $d, bool $big = false): string
+{
+    $sz = $big ? '' : ' sm';
+    if ($d['access'] === 'request') return wa_btn('Request on WhatsApp', 'document', $d['title'], 'btn wa' . $sz);
+    return '<div class="row-btns"><a class="btn dark' . $sz . '" href="' . h(url('doc.php?id=' . (int) $d['id'])) . '" target="_blank" rel="noopener">' . sicon('file', 16) . ' Read online</a>'
+        . '<a class="link-more" href="' . h(url('doc.php?id=' . (int) $d['id'] . '&dl=1')) . '">' . sicon('download', 16) . ' Download' . ($d['file_size'] ? ' <small class="muted">(' . h(human_size((int) $d['file_size'])) . ')</small>' : '') . '</a></div>';
+}
+
+function doc_card(array $d): string
+{
+    ob_start(); ?>
+<article class="doccard">
+  <div class="doccard-img"><?php if ($d['image']): ?><img src="<?= h(upload_url($d['image'], 'sm')) ?>" alt="" loading="lazy"><?php else: ?><span class="pdfmark"><?= sicon('file', 40) ?><b>PDF</b></span><?php endif; ?>
+    <?php if ($d['access'] === 'request'): ?><span class="otag">On request</span><?php endif; ?></div>
+  <div class="doccard-body">
+    <h3><?= h($d['title']) ?></h3>
+    <?php if ($d['summary']): ?><p><?= h(excerpt($d['summary'], 120)) ?></p><?php endif; ?>
+    <?= doc_buttons($d) ?>
+  </div>
+</article>
 <?php return ob_get_clean();
 }
 

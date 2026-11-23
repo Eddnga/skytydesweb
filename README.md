@@ -66,6 +66,8 @@ Deploys never overwrite `config.php`, `storage/` or images uploaded in the dashb
 
 **Text formatting in the dashboard:** `## Heading`, `- bullet`, `**bold**`, `*italic*`, `[link](https://…)`. In headings, `*word*` becomes the gold italic accent.
 
+**Upload limits:** PDFs can be up to 25 MB and images 8 MB, but many hosts default to 2 MB. In cPanel → **MultiPHP INI Editor**, set `upload_max_filesize = 32M` and `post_max_size = 40M` for the site.
+
 **Brand fonts:** put `Allenoire.woff2` and the `Lufga-*.woff2` files in `assets/fonts/` and uncomment the `@font-face` block at the top of `assets/css/site.css`.
 
 **Forgot password:** another Admin can reset it under Users — keep at least two admin accounts.

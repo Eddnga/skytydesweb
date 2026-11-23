@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 header('Content-Type: application/xml; charset=utf-8');
-$urls = ['', 'tours.php', 'destinations.php', 'services.php', 'gallery.php', 'blog.php', 'reviews.php', 'faqs.php', 'about.php', 'contact.php', 'offers.php'];
+$urls = ['', 'tours.php', 'destinations.php', 'services.php', 'gallery.php', 'blog.php', 'reviews.php', 'faqs.php', 'about.php', 'contact.php', 'offers.php', 'documents.php'];
 foreach (rows('SELECT slug FROM tours WHERE active = 1') as $r) $urls[] = 'tour.php?slug=' . rawurlencode($r['slug']);
 foreach (rows('SELECT slug FROM destinations WHERE active = 1') as $r) $urls[] = 'destination.php?slug=' . rawurlencode($r['slug']);
 foreach (rows('SELECT slug FROM posts WHERE published = 1') as $r) $urls[] = 'post.php?slug=' . rawurlencode($r['slug']);

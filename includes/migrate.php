@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -39,6 +39,28 @@ function schema_v2(): array
     ];
 }
 
+/** Version 3: documents library (company profile, rates, brochures). */
+function schema_v3(): array
+{
+    return [
+        "CREATE TABLE IF NOT EXISTS documents (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            category VARCHAR(80) NULL,
+            summary TEXT NULL,
+            file VARCHAR(255) NULL,
+            file_size INT UNSIGNED NULL,
+            image VARCHAR(255) NULL,
+            access VARCHAR(12) NOT NULL DEFAULT 'public',
+            featured TINYINT(1) NOT NULL DEFAULT 0,
+            downloads INT UNSIGNED NOT NULL DEFAULT 0,
+            sort INT NOT NULL DEFAULT 0,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    ];
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -57,8 +79,11 @@ function maybe_migrate(): void
         $v = (int) (settings()['db_version'] ?? 1);
         if ($v >= DB_VERSION) return;
         $sqlite = ($CONFIG['db']['driver'] ?? 'mysql') === 'sqlite';
-        foreach (schema_v2() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
-        seed_v2_defaults();
+        if ($v < 2) {
+            foreach (schema_v2() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
+            seed_v2_defaults();
+        }
+        if ($v < 3) foreach (schema_v3() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

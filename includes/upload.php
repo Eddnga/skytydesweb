@@ -79,6 +79,40 @@ function save_resized($src, string $path, int $maxW, bool $png): void
     imagedestroy($dst);
 }
 
+/** Securely store an uploaded PDF (company profile, rates, brochure). Returns [path, size]. */
+function store_document(array $f): array
+{
+    $max = 25 * 1024 * 1024;
+    if (($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        $codes = [UPLOAD_ERR_INI_SIZE => 'The file is larger than your hosting allows (ask your host to raise upload_max_filesize).', UPLOAD_ERR_FORM_SIZE => 'The file is too large.', UPLOAD_ERR_PARTIAL => 'The upload was interrupted. Try again.', UPLOAD_ERR_NO_FILE => 'No file was chosen.'];
+        throw new RuntimeException($codes[$f['error']] ?? 'The upload failed.');
+    }
+    if (!is_uploaded_file($f['tmp_name'])) throw new RuntimeException('Invalid upload.');
+    if ($f['size'] > $max) throw new RuntimeException('PDFs must be under 25 MB.');
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+    $head = (string) file_get_contents($f['tmp_name'], false, null, 0, 5);
+    if ($mime !== 'application/pdf' || $head !== '%PDF-') throw new RuntimeException('Only PDF files can be uploaded here.');
+    $dir = ROOT . '/uploads/docs';
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) throw new RuntimeException('The uploads folder is not writable.');
+    $name = bin2hex(random_bytes(12)) . '.pdf';
+    if (!move_uploaded_file($f['tmp_name'], "$dir/$name")) throw new RuntimeException('Could not save the file.');
+    @chmod("$dir/$name", 0644);
+    return ['docs/' . $name, (int) $f['size']];
+}
+
+function delete_document(?string $rel): void
+{
+    if (!$rel || !preg_match('#^docs/[a-f0-9]{24}\.pdf$#', $rel)) return;
+    $abs = ROOT . '/uploads/' . $rel;
+    if (is_file($abs)) @unlink($abs);
+}
+
+function human_size(?int $b): string
+{
+    if (!$b) return '';
+    return $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : max(1, round($b / 1024)) . ' KB';
+}
+
 function delete_image(?string $rel): void
 {
     if (!$rel || strpos($rel, 'seed/') === 0 || strpos($rel, '..') !== false) return;

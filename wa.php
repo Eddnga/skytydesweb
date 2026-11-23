@@ -26,6 +26,7 @@ $lines = ['Hello SkyTydes Safaris! 👋'];
 if ($src === 'tour' && $item !== '') $lines[] = "I'd like to book: *{$item}*";
 elseif ($src === 'destination' && $item !== '') $lines[] = "I'd like to plan a trip to *{$item}*.";
 elseif ($src === 'service' && $item !== '') $lines[] = "I'd like to ask about: *{$item}*";
+elseif ($src === 'document' && $item !== '') $lines[] = "Please send me your *{$item}*.";
 elseif ($src === 'offer' && $item !== '') $lines[] = "I'm interested in your special offer: *{$item}*";
 else $lines[] = "I'd like to plan a trip.";
 if ($name !== '') $lines[] = "Name: {$name}";

@@ -140,6 +140,23 @@ function entities(): array
                 ['active', 'bool', 'Show on website', ['default' => 1]],
             ],
         ],
+        'documents' => [
+            'table' => 'documents', 'label' => 'Documents', 'one' => 'document', 'icon' => 'file', 'title' => 'title', 'timestamps_created' => true,
+            'order' => 'featured DESC, sort ASC, id DESC',
+            'help' => 'PDFs clients can read or download on the Brochures & documents page — company profile, rates, brochures, terms. Set rates you prefer to share personally to "On request".',
+            'list' => ['image' => 'Cover', 'title' => 'Document', 'category' => 'Type', 'access' => 'Access', 'downloads' => 'Opened', 'active' => 'Status'],
+            'fields' => [
+                ['title', 'text', 'Title', ['required' => true, 'hint' => 'e.g. SkyTydes Company Profile 2027']],
+                ['category', 'select', 'Type', ['options' => ['Company profile' => 'Company profile', 'Rates' => 'Rates', 'Brochure' => 'Brochure', 'Itinerary' => 'Itinerary', 'Terms & conditions' => 'Terms & conditions', 'Other' => 'Other'], 'default' => 'Brochure']],
+                ['summary', 'textarea', 'Short description'],
+                ['file', 'pdf', 'PDF file', ['required' => true]],
+                ['access', 'select', 'Who can open it', ['options' => ['public' => 'Anyone — view & download', 'request' => 'On request — client asks on WhatsApp'], 'default' => 'public']],
+                ['image', 'image', 'Cover image (optional)', ['hint' => 'Shown on the card. Use the first page of the PDF or a photo.']],
+                ['featured', 'bool', 'Highlight (e.g. your main company profile)'],
+                ['sort', 'number', 'Display order', ['default' => 0]],
+                ['active', 'bool', 'Published', ['default' => 1]],
+            ],
+        ],
         'gallery' => [
             'table' => 'gallery', 'label' => 'Gallery', 'one' => 'photo', 'icon' => 'grid', 'title' => 'caption', 'timestamps_created' => true,
             'order' => 'sort ASC, id DESC', 'bulk_upload' => true,

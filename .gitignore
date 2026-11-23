@@ -13,6 +13,10 @@ uploads/*
 !uploads/.htaccess
 !uploads/index.html
 !uploads/seed/
+!uploads/docs/
+uploads/docs/*
+!uploads/docs/.htaccess
+!uploads/docs/index.html
 
 # ---- OS / editor clutter ----
 .DS_Store

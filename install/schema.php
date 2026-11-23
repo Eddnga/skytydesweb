@@ -163,7 +163,7 @@ function schema_sql(): array
         ip VARCHAR(45) NULL,
         created_at DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    $t = array_merge($t, schema_v2());
+    $t = array_merge($t, schema_v2(), schema_v3());
     $t[] = "CREATE INDEX idx_throttle ON throttle (k, created_at)";
     $t[] = "CREATE INDEX idx_login ON login_attempts (email, attempted_at)";
     $t[] = "CREATE INDEX idx_days ON itinerary_days (tour_id, day_no)";

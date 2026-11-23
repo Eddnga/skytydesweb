@@ -1,0 +1,3 @@
+# PDFs are served through doc.php only (so "on request" files stay private)
+Require all denied
+Deny from all
