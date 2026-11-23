@@ -583,3 +583,4 @@ a.rsrc:hover{filter:brightness(.95)}
 .reviews-layout .rtrack .rcard,.tour-main .rtrack .rcard{flex-basis:calc((100% - 24px)/1.6)}
 @media (max-width:1024px){.rtrack .rcard{flex-basis:calc((100% - 24px)/1.6)}}
 @media (max-width:640px){.rtrack .rcard,.reviews-layout .rtrack .rcard,.tour-main .rtrack .rcard{flex-basis:84%}}
+.reviews-home{padding-top:90px}

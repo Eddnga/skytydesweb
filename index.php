@@ -125,6 +125,17 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
 </section>
 <?php endif; ?>
 
+<section class="sec reviews-home" id="reviews">
+  <div class="wrap">
+    <div class="sec-head"><div><p class="eyebrow">Guest reviews</p><h2 class="h2">What our <em>travellers say</em></h2></div><a class="link-more" href="<?= url('reviews.php') ?>">All reviews <?= sicon('arrow', 18) ?></a></div>
+    <div class="reviews-layout">
+      <?= review_summary() ?>
+      <?php if ($reviews): ?><?= reviews_slider($reviews) ?><?php else: ?><div class="rempty"><p>We'd love to hear about your trip — your review will appear here once our team has approved it.</p></div><?php endif; ?>
+    </div>
+  </div>
+</section>
+
+
 <?php if ($services): ?>
 <section class="sec tint">
   <div class="wrap">
@@ -154,15 +165,6 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
 </section>
 <?php endif; ?>
 
-<section class="sec">
-  <div class="wrap">
-    <div class="sec-head"><div><p class="eyebrow">Guest reviews</p><h2 class="h2">What our <em>travellers say</em></h2></div><a class="link-more" href="<?= url('reviews.php') ?>">All reviews <?= sicon('arrow', 18) ?></a></div>
-    <div class="reviews-layout">
-      <?= review_summary() ?>
-      <?php if ($reviews): ?><?= reviews_slider($reviews) ?><?php else: ?><div class="rempty"><p>We'd love to hear about your trip — your review will appear here once our team has approved it.</p></div><?php endif; ?>
-    </div>
-  </div>
-</section>
 
 <?php if ($gallery): ?>
 <section class="sec gal-strip">
