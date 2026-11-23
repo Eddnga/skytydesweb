@@ -54,7 +54,7 @@ page_hero('Guest *reviews*', 'In their words', val('SELECT image FROM gallery WH
         <?php foreach (review_sources() as $k => $lab): if (empty($srcCounts[$k])) continue; ?><a href="<?= url('reviews.php?src=' . $k) ?>" class="<?= $src === $k ? 'on' : '' ?>"><?= h($k === 'website' ? 'Website' : $lab) ?> <small><?= $srcCounts[$k] ?></small></a><?php endforeach; ?>
       </nav>
     <?php endif; ?>
-    <?php if ($reviews): ?><div class="rgrid"><?php foreach ($reviews as $r) echo review_card($r); ?></div>
+    <?php if ($reviews): ?><div class="reviews-page-slider"><?= reviews_slider($reviews) ?></div>
     <?php else: ?><p class="muted center rempty-page">No reviews yet — be the first to share your SkyTydes experience.</p><?php endif; ?>
   </div>
 </section>

@@ -15,7 +15,6 @@ $posts = rows('SELECT * FROM posts WHERE published = 1 AND published_at <= ? ORD
 $offers = active_offers(3);
 $ways = array_map(fn($l) => array_map('trim', explode('|', $l)) + [1 => '', 2 => 'tours.php'], lines(setting('ways')));
 $creds = array_map(fn($l) => array_map('trim', explode('|', $l, 2)) + [1 => ''], lines(setting('credentials')));
-$quote = row("SELECT r.*, t.title tour FROM reviews r LEFT JOIN tours t ON t.id = r.tour_id WHERE r.status = 'approved' AND r.rating = 5 ORDER BY LENGTH(r.body) DESC LIMIT 1");
 $wayImgs = array_column(rows('SELECT image FROM tours WHERE active = 1 AND image IS NOT NULL ORDER BY featured DESC, sort LIMIT 3'), 'image');
 $why = array_map(fn($l) => array_map('trim', explode('|', $l, 2)) + [1 => ''], lines(setting('why_us')));
 
@@ -115,15 +114,7 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
 </section>
 <?php endif; ?>
 
-<?php if ($quote): ?>
-<section class="pullquote">
-  <div class="wrap narrow center">
-    <span class="pq-mark" aria-hidden="true">“</span>
-    <blockquote><?= h(excerpt($quote['body'], 260)) ?></blockquote>
-    <p class="pq-by"><?= stars(5) ?><b><?= h($quote['name']) ?></b><?= $quote['country'] ? ' · ' . h($quote['country']) : '' ?><?= $quote['tour'] ? ' · ' . h($quote['tour']) : '' ?></p>
-  </div>
-</section>
-<?php endif; ?>
+
 
 <section class="sec reviews-home" id="reviews">
   <div class="wrap">
