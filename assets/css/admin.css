@@ -169,3 +169,30 @@ body.modal-open{overflow:hidden}
 .modal-body{overflow-y:auto;flex:1;padding:24px 26px 0;overscroll-behavior:contain}
 .modal-body .actions.sticky{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);margin:24px -26px 0;padding:16px 26px;z-index:3}
 @media (max-width:640px){.modal{padding:0;align-items:stretch}.modal-box{max-height:100vh;border-radius:0}.modal-head{border-radius:0}}
+/* sidebar: compact, grouped, fits the screen; menu scrolls quietly only on very short screens */
+.side{padding:18px 12px 12px;overflow:hidden}
+.side-logo{padding:2px 10px 14px}.side-logo img{width:132px}
+.side nav{overflow-y:auto;min-height:0;scrollbar-width:none;margin:0 -4px;padding:0 4px}
+.side nav::-webkit-scrollbar{display:none}
+.side a,.side button{padding:7px 12px;font-size:13.5px;gap:11px}
+.side-h{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45);margin:14px 12px 4px;font-weight:500}
+.side-foot{flex-shrink:0;padding-top:8px;margin-top:8px}
+/* card headings inside table cards */
+.card-title{font-size:19px;padding:20px 22px 14px;margin:0}
+.table-wrap .empty{padding:30px 20px}
+.cols.wide-first{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+@media (max-width:1100px){.cols.wide-first{grid-template-columns:minmax(0,1fr)}}
+.side nav{padding-bottom:16px}
+.usermenu{position:relative}
+.usermenu summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 10px 4px 4px;border:1px solid var(--line);border-radius:999px;font-size:14px;font-weight:500;color:var(--green)}
+.usermenu summary::-webkit-details-marker{display:none}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:600}
+.usermenu-pop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:10px;width:250px;z-index:30}
+.usermenu-pop p{margin:4px 8px 10px;line-height:1.35}
+.usermenu-pop a,.usermenu-pop button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:9px;border:0;background:none;font:inherit;font-size:14px;color:var(--ink);text-decoration:none;cursor:pointer;text-align:left}
+.usermenu-pop a:hover,.usermenu-pop button:hover{background:#F2F4EF}
+@media (max-width:640px){.hide-sm{display:none}}
+.side-logo img{width:118px}.side-logo{padding-bottom:10px}
+.side a,.side button{padding:6px 12px}
+.side-h{margin:10px 12px 2px}
+[hidden]{display:none!important}

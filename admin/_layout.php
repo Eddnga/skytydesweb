@@ -71,20 +71,26 @@ function admin_header(string $title, string $active = ''): void
 <aside class="side">
   <a href="<?= url('admin/') ?>" class="side-logo"><img src="<?= asset('img/logo-white.svg') ?>" alt="SkyTydes Safaris"></a>
   <nav>
-    <?php foreach ($nav as $n): ?>
-      <a href="<?= url('admin/' . $n[0]) ?>" class="<?= $active === $n[3] ? 'on' : '' ?>"><?= icon($n[2]) ?><span><?= h($n[1]) ?></span><?php if (!empty($n[4])): ?><b class="badge"><?= (int) $n[4] ?></b><?php endif; ?></a>
+    <?php $groups = ['dashboard' => '', 'hero' => 'Website', 'reviews' => 'Customers', 'settings' => 'Settings'];
+    foreach ($nav as $n): ?>
+      <?php if (!empty($groups[$n[3]])): ?><p class="side-h"><?= h($groups[$n[3]]) ?></p><?php endif; ?>
+      <a href="<?= url('admin/' . $n[0]) ?>" class="<?= $active === $n[3] ? 'on' : '' ?>"><?= icon($n[2], 18) ?><span><?= h($n[1]) ?></span><?php if (!empty($n[4])): ?><b class="badge"><?= (int) $n[4] ?></b><?php endif; ?></a>
     <?php endforeach; ?>
   </nav>
-  <div class="side-foot">
-    <a href="<?= url('admin/account.php') ?>" class="<?= $active === 'account' ? 'on' : '' ?>"><?= icon('user') ?><span><?= h($u['name']) ?></span></a>
-    <form method="post" action="<?= url('admin/logout.php') ?>"><?= csrf_field() ?><button><?= icon('out') ?><span>Log out</span></button></form>
-  </div>
 </aside>
 <main class="main">
   <header class="top">
     <label for="navtoggle" class="burger"><?= icon('menu', 24) ?></label>
     <h1><?= h($title) ?></h1>
-    <a class="btn ghost sm" href="<?= url('') ?>" target="_blank" rel="noopener"><?= icon('ext', 16) ?> View site</a>
+    <a class="btn ghost sm" href="<?= url('') ?>" target="_blank" rel="noopener"><?= icon('ext', 16) ?> <span class="hide-sm">View site</span></a>
+    <details class="usermenu">
+      <summary><span class="avatar"><?= h(mb_strtoupper(mb_substr($u['name'], 0, 1))) ?></span><span class="hide-sm"><?= h(explode(' ', $u['name'])[0]) ?></span></summary>
+      <div class="usermenu-pop">
+        <p><strong><?= h($u['name']) ?></strong><br><span class="muted small"><?= h($u['email']) ?></span></p>
+        <a href="<?= url('admin/account.php') ?>"><?= icon('user', 18) ?> My account &amp; password</a>
+        <form method="post" action="<?= url('admin/logout.php') ?>"><?= csrf_field() ?><button><?= icon('out', 18) ?> Log out</button></form>
+      </div>
+    </details>
   </header>
   <div class="content">
   <?php if ($m = flash('ok')): ?><div class="notice ok"><?= h($m) ?></div><?php endif; ?>
