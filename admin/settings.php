@@ -34,7 +34,7 @@ $groups = [
         ['social_tiktok', 'text', 'TikTok link', ''],
         ['social_x', 'text', 'X (Twitter) link', ''],
         ['social_youtube', 'text', 'YouTube link', ''],
-        ['social_linkedin', 'text', 'LinkedIn link', 'Icons show in the footer and on the Contact page once a link is added. WhatsApp always shows.'],
+        ['social_linkedin', 'text', 'LinkedIn link', 'Facebook, Instagram, TikTok and YouTube icons always show and become clickable once a link is added. X and LinkedIn show only when linked.'],
         ['meta_description', 'textarea', 'Search engine description', 'About 150 characters. Shown under your site name on Google.'],
         ['tagline', 'text', 'Tagline', ''],
     ],

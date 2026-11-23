@@ -487,3 +487,6 @@ h1 em,h2 em,.h2 em{font-style:italic;color:var(--gold);font-weight:400}
 .socials.dark a{border-color:var(--line);color:var(--green)}
 .socials.dark a:hover{color:var(--deep)}
 .ccard.follow .socials a{width:40px;height:40px}
+.socials .soon{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;color:#fff;cursor:default}
+.socials.dark .soon{border-color:var(--line);color:var(--green)}
+.ccard.follow .socials .soon{width:40px;height:40px}

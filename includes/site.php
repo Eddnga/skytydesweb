@@ -325,7 +325,7 @@ function team_cards(): string
 <?php return ob_get_clean();
 }
 
-/** Social media icons. WhatsApp always shows; the others appear once their link is added in Site settings. */
+/** Social media icons. Facebook, Instagram, TikTok, YouTube and WhatsApp always show (as plain icons until a link is added); X and LinkedIn appear once linked. */
 function social_links(string $class = 'socials'): string
 {
     $nets = [
@@ -333,9 +333,15 @@ function social_links(string $class = 'socials'): string
         'social_x' => ['x', 'X (Twitter)'], 'social_youtube' => ['youtube', 'YouTube'], 'social_linkedin' => ['linkedin', 'LinkedIn'],
     ];
     $out = '<div class="' . h($class) . '">';
+    $always = ['social_facebook', 'social_instagram', 'social_tiktok', 'social_youtube'];
     foreach ($nets as $k => [$ic, $label]) {
         $link = setting($k);
-        if ($link !== '' && preg_match('#^https://#i', $link)) $out .= '<a href="' . h($link) . '" target="_blank" rel="noopener noreferrer" aria-label="' . h($label) . '" title="' . h($label) . '">' . sicon($ic, 19) . '</a>';
+        if ($link !== '' && preg_match('#^https://#i', $link)) {
+            $out .= '<a href="' . h($link) . '" target="_blank" rel="noopener noreferrer" aria-label="' . h($label) . '" title="' . h($label) . '">' . sicon($ic, 19) . '</a>';
+        } elseif (in_array($k, $always, true)) {
+            // no link yet: show the icon, but not as a clickable link
+            $out .= '<span class="soon" role="img" aria-label="' . h($label) . ' (coming soon)" title="' . h($label) . ' — coming soon">' . sicon($ic, 19) . '</span>';
+        }
     }
     $out .= '<a href="' . h(wa_link('Hello SkyTydes Safaris!')) . '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" title="WhatsApp">' . sicon('wa', 19) . '</a>';
     return $out . '</div>';
