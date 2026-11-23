@@ -18,6 +18,7 @@ $tel = fn($p) => 'tel:' . preg_replace('/[^\d+]/', '', $p);
       <div class="ccard"><?= sicon('phone') ?><div><span>Call us</span><?php foreach (['phone1', 'phone2'] as $k): if (setting($k)): ?><a href="<?= h($tel(setting($k))) ?>"><?= h(setting($k)) ?></a><?php endif; endforeach; ?></div></div>
       <div class="ccard"><?= sicon('mail') ?><div><span>Email</span><a href="mailto:<?= h(setting('email')) ?>"><?= h(setting('email')) ?></a></div></div>
       <div class="ccard"><?= sicon('pin') ?><div><span>Office</span><b><?= h(setting('address')) ?></b><small><?= h(setting('postal')) ?></small></div></div>
+      <div class="ccard follow"><?= sicon('heart') ?><div><span>Follow us</span><?= social_links('socials dark') ?></div></div>
     </div>
   </div>
 </section>

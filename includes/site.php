@@ -26,6 +26,9 @@ function sicon(string $n, int $s = 22): string
         'menu' => '<path d="M4 7h16M4 12h16M4 17h16"/>',
         'meal' => '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 0-3 2-3 5s1 4 3 4v9"/>',
         'calendar' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        'x' => '<path d="M4 4l16 16M20 4L4 20" stroke-width="2"/>',
+        'youtube' => '<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/>',
+        'linkedin' => '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
         'insta' => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>',
         'fb' => '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/>',
         'tiktok' => '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3a5 5 0 0 0 5 5"/>',
@@ -183,11 +186,8 @@ function site_footer(): void
     <div class="foot-brand">
       <img src="<?= asset('img/logo-dark.svg') ?>" alt="SkyTydes Safaris" width="190" height="98" loading="lazy">
       <p><?= h(setting('meta_description')) ?></p>
-      <div class="socials">
-        <?php foreach (['social_instagram' => ['insta', 'Instagram'], 'social_facebook' => ['fb', 'Facebook'], 'social_tiktok' => ['tiktok', 'TikTok']] as $k => $v): if (!empty($s[$k])): ?>
-          <a href="<?= h($s[$k]) ?>" target="_blank" rel="noopener noreferrer" aria-label="<?= $v[1] ?>"><?= sicon($v[0], 20) ?></a>
-        <?php endif; endforeach; ?>
-      </div>
+      <p class="follow-h">Follow the tides</p>
+      <?= social_links() ?>
     </div>
     <div><h3>Explore</h3><ul><li><a href="<?= url('tours.php') ?>">Tour packages</a></li><li><a href="<?= url('destinations.php') ?>">Destinations</a></li><li><a href="<?= url('offers.php') ?>">Special offers</a></li><li><a href="<?= url('services.php') ?>">Services</a></li><li><a href="<?= url('gallery.php') ?>">Gallery</a></li><li><a href="<?= url('blog.php') ?>">Journal</a></li><li><a href="<?= url('faqs.php') ?>">FAQs</a></li></ul></div>
     <div><h3>Destinations</h3><ul><?php foreach ($dests as $d): ?><li><a href="<?= url('destination.php?slug=' . rawurlencode($d['slug'])) ?>"><?= h($d['name']) ?></a></li><?php endforeach; ?></ul></div>
@@ -323,6 +323,22 @@ function team_cards(): string
   <?php endforeach; ?>
 </div>
 <?php return ob_get_clean();
+}
+
+/** Social media icons. WhatsApp always shows; the others appear once their link is added in Site settings. */
+function social_links(string $class = 'socials'): string
+{
+    $nets = [
+        'social_facebook' => ['fb', 'Facebook'], 'social_instagram' => ['insta', 'Instagram'], 'social_tiktok' => ['tiktok', 'TikTok'],
+        'social_x' => ['x', 'X (Twitter)'], 'social_youtube' => ['youtube', 'YouTube'], 'social_linkedin' => ['linkedin', 'LinkedIn'],
+    ];
+    $out = '<div class="' . h($class) . '">';
+    foreach ($nets as $k => [$ic, $label]) {
+        $link = setting($k);
+        if ($link !== '' && preg_match('#^https://#i', $link)) $out .= '<a href="' . h($link) . '" target="_blank" rel="noopener noreferrer" aria-label="' . h($label) . '" title="' . h($label) . '">' . sicon($ic, 19) . '</a>';
+    }
+    $out .= '<a href="' . h(wa_link('Hello SkyTydes Safaris!')) . '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" title="WhatsApp">' . sicon('wa', 19) . '</a>';
+    return $out . '</div>';
 }
 
 function not_found(): void

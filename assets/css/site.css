@@ -478,3 +478,12 @@ h1 em,h2 em,.h2 em{font-style:italic;color:var(--gold);font-weight:400}
 .prose hr{border:0;border-top:1px solid var(--line);margin:2em 0}
 .prose a{color:var(--green-2);text-decoration-color:var(--gold);text-underline-offset:3px}
 .prose u{text-decoration-color:var(--gold)}
+/* social icons */
+.follow-h{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:22px 0 12px;font-weight:500}
+.socials{display:flex;flex-wrap:wrap;gap:10px}
+.socials a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s,color .2s,border-color .2s,transform .2s}
+.socials a:hover{background:var(--gold);border-color:var(--gold);color:var(--deep);transform:translateY(-2px)}
+.socials.dark{margin-top:8px}
+.socials.dark a{border-color:var(--line);color:var(--green)}
+.socials.dark a:hover{color:var(--deep)}
+.ccard.follow .socials a{width:40px;height:40px}
