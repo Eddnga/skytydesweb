@@ -165,3 +165,23 @@ function audit(string $action, string $entity = '', ?int $id = null): void
     } catch (Throwable $e) {
     }
 }
+
+/**
+ * Checks the server's PHP against the November 2026 security releases
+ * (fixes PHP2Shell CVE-2026-109618/109619 and the 19 Nov 2026 critical bugs).
+ * Returns null when patched, otherwise a warning for the admin.
+ */
+function php_patch_warning(?string $v = null): ?string
+{
+    $v = $v ?? PHP_VERSION;
+    $min = ['8.2' => '8.2.36', '8.3' => '8.3.37', '8.4' => '8.4.28', '8.5' => '8.5.13'];
+    $branch = implode('.', array_slice(explode('.', $v), 0, 2));
+    if (version_compare($v, '8.6.0', '>=')) return null;
+    if (!isset($min[$branch])) {
+        return "This server runs PHP $v, which no longer gets security fixes. Switch the site to PHP 8.4 in your hosting panel.";
+    }
+    if (version_compare($v, $min[$branch], '<')) {
+        return "This server runs PHP $v, which is missing critical security patches. Ask your host to update to PHP {$min[$branch]} or newer" . ($branch === '8.4' ? '.' : ' (or switch to PHP 8.4).');
+    }
+    return null;
+}

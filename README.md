@@ -1,6 +1,8 @@
 # SkyTydes Safaris — website + dashboard
 
-Plain PHP 8.1+ and MySQL. No build step, no Composer. Runs on any cPanel host.
+Plain PHP and MySQL. No build step, no Composer. Runs on any shared host (cPanel, Chajio MyPanel, etc.).
+
+**PHP version:** use PHP 8.4 (or 8.3 / 8.5) at the November 2026 security release or newer: **8.4.28+, 8.3.37+ or 8.5.13+**. Earlier builds are exposed to PHP2Shell (CVE-2026-109618/109619) and the critical bugs fixed on 19 Nov 2026. PHP 8.1 and older get no security fixes. The dashboard and installer show a warning if the server's PHP is behind.
 
 **Live site:** https://skytydessafaris.com · **Dashboard:** `/admin`
 

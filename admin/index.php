@@ -19,6 +19,7 @@ $top = rows('SELECT item, COUNT(*) n FROM leads WHERE item IS NOT NULL AND creat
 
 admin_header('Welcome back, ' . explode(' ', $user['name'])[0], 'dashboard');
 ?>
+<?php if ($w = php_patch_warning()): ?><div class="notice warn"><b>Server update needed.</b> <?= h($w) ?></div><?php endif; ?>
 <div class="stats">
   <?php foreach ($stats as $s): ?>
     <a class="stat card" href="<?= url('admin/' . $s[2]) ?>"><?= icon($s[3], 22) ?><b><?= $s[1] ?></b><span><?= h($s[0]) ?></span></a>

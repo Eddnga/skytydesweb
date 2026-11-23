@@ -86,7 +86,8 @@ if (is_post()) {
     <p class="row-gap"><a class="btn" href="../admin/login.php">Open the dashboard</a> <a class="btn ghost" href="../">View the website</a></p>
   <?php else: ?>
     <h1>Install SkyTydes</h1>
-    <p class="muted">Create a MySQL database and user in cPanel first, then fill this in.</p>
+    <p class="muted">Create a MySQL database and user in your hosting panel first, then fill this in.</p>
+    <?php if ($w = php_patch_warning()): ?><div class="notice warn"><strong>Server update needed.</strong> <?= h($w) ?></div><?php endif; ?>
     <?php foreach ($errors as $e): ?><div class="notice error"><?= h($e) ?></div><?php endforeach; ?>
     <form method="post" class="form" autocomplete="off">
       <?= csrf_field() ?>
