@@ -21,7 +21,9 @@ header('Cache-Control: no-store');
 <meta name="robots" content="noindex,nofollow">
 <title>Log in · SkyTydes Dashboard</title>
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-<link rel="icon" href="<?= asset('img/favicon.svg') ?>">
+<link rel="icon" href="<?= asset('img/favicon-32.png') ?>" type="image/png" sizes="32x32">
+<link rel="icon" href="<?= asset('img/favicon-192.png') ?>" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="<?= asset('img/apple-touch-icon.png') ?>">
 </head><body class="auth">
 <main class="auth-card">
   <img src="<?= asset('img/logo-color.svg') ?>" alt="SkyTydes Safaris" class="auth-logo">

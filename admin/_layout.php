@@ -65,7 +65,9 @@ function admin_header(string $title, string $active = ''): void
 <title><?= h($title) ?> · SkyTydes Dashboard</title>
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css">
-<link rel="icon" href="<?= asset('img/favicon.svg') ?>">
+<link rel="icon" href="<?= asset('img/favicon-32.png') ?>" type="image/png" sizes="32x32">
+<link rel="icon" href="<?= asset('img/favicon-192.png') ?>" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="<?= asset('img/apple-touch-icon.png') ?>">
 </head><body>
 <input type="checkbox" id="navtoggle" hidden>
 <aside class="side">

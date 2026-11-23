@@ -74,6 +74,7 @@ if (is_post()) {
 <meta name="robots" content="noindex">
 <title>Install · SkyTydes Safaris</title>
 <link rel="stylesheet" href="../assets/css/admin.css">
+<link rel="icon" href="../assets/img/favicon-32.png" type="image/png">
 </head><body class="auth">
 <main class="auth-card wide">
   <img src="../assets/img/logo-color.svg" alt="SkyTydes Safaris" class="auth-logo">
