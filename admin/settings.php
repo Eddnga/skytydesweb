@@ -12,6 +12,7 @@ $groups = [
         ['address', 'text', 'Address', ''],
         ['postal', 'text', 'Postal address', ''],
         ['hours', 'text', 'Opening hours', ''],
+        ['map_address', 'text', 'Address for the Google Map', 'What Google Maps should search for, e.g. Mobil Plaza, Muthaiga Road, Nairobi. Leave empty to use the address above.'],
     ],
     'Home page' => [
         ['intro_title', 'text', 'Intro heading', ''],

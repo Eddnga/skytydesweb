@@ -17,4 +17,5 @@ page_hero(setting('about_title', 'About us'), 'Our story', val('SELECT image FRO
 <?php if ($why): ?>
 <section class="sec tint"><div class="wrap"><div class="why"><?php foreach ($why as $i => $w): ?><div class="why-item"><span class="why-n"><?= sprintf('%02d', $i + 1) ?></span><h3><?= h($w[0]) ?></h3><p><?= h($w[1]) ?></p></div><?php endforeach; ?></div></div></section>
 <?php endif; ?>
+<section class="sec map-sec" id="visit"><div class="wrap"><?= office_map() ?></div></section>
 <?php site_footer();

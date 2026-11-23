@@ -347,6 +347,27 @@ function social_links(string $class = 'socials'): string
     return $out . '</div>';
 }
 
+/** Google Map of the office (no API key needed). Address comes from Site settings. */
+function office_map(): string
+{
+    $q = setting('map_address', setting('address', 'Mobil Plaza, Muthaiga, Nairobi, Kenya'));
+    if ($q === '') return '';
+    $embed = 'https://www.google.com/maps?q=' . rawurlencode($q) . '&z=16&output=embed';
+    $open = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($q);
+    ob_start(); ?>
+<div class="map-wrap">
+  <div class="map-card">
+    <p class="eyebrow">Visit us</p>
+    <h2 class="h3">Our office</h2>
+    <p><?= h(setting('address')) ?><br><span class="muted"><?= h(setting('postal')) ?></span></p>
+    <?php if (setting('hours')): ?><p class="muted small"><?= sicon('clock', 16) ?> <?= h(setting('hours')) ?></p><?php endif; ?>
+    <div class="row-btns"><a class="btn dark sm" href="<?= h($open) ?>" target="_blank" rel="noopener noreferrer"><?= sicon('pin', 16) ?> Get directions</a><?= wa_btn('Book a visit', 'general', 'Office visit') ?></div>
+  </div>
+  <iframe class="map" src="<?= h($embed) ?>" title="Map showing the SkyTydes Safaris office at <?= h($q) ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+</div>
+<?php return ob_get_clean();
+}
+
 function not_found(): void
 {
     http_response_code(404);
