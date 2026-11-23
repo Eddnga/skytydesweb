@@ -603,3 +603,10 @@ a.rsrc:hover{filter:brightness(.95)}
 .reviews-dark .rnav button:hover{background:var(--gold);border-color:var(--gold);color:var(--deep)}
 .reviews-dark .rempty{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
 .rtrack{padding:4px 4px 30px;margin:-4px -4px -24px}
+/* hero location line sits under the buttons (never overlaps them) */
+.slide-in .coords{position:static;margin:34px 0 0;display:flex}
+.slide-in{padding-bottom:110px}
+@media (max-width:640px){.slide-in .coords{margin-top:24px}.slide-in{padding-bottom:120px}}
+/* keep hero text clear of the header on shorter screens */
+.slide-in{padding-top:130px}
+@media (max-height:800px) and (min-width:641px){.display{font-size:clamp(44px,5.6vw,80px);margin-bottom:16px}.hero .lead{margin-bottom:24px}.slide-in .coords{margin-top:24px}}

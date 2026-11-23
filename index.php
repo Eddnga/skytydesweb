@@ -33,8 +33,8 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
         <?php if ($s['cta_label'] && $s['cta_link']): ?><a class="btn gold lg" href="<?= h(preg_match('#^https?://#', $s['cta_link']) ? $s['cta_link'] : url($s['cta_link'])) ?>"><?= h($s['cta_label']) ?> <?= sicon('arrow', 18) ?></a><?php endif; ?>
         <?= wa_btn('Plan on WhatsApp', 'general', 'Home hero', 'btn glass lg') ?>
       </div>
+      <?php if ($s['caption']): ?><p class="coords"><?= sicon('pin', 15) ?><?= h($s['caption']) ?></p><?php endif; ?>
     </div>
-    <?php if ($s['caption']): ?><p class="coords"><?= sicon('pin', 15) ?><?= h($s['caption']) ?></p><?php endif; ?>
   </div>
   <?php endforeach; ?>
   <?php if (count($slides) > 1): ?>
