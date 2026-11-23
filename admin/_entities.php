@@ -69,7 +69,7 @@ function entities(): array
             ],
         ],
         'posts' => [
-            'table' => 'posts', 'label' => 'Blog posts', 'one' => 'post', 'icon' => 'pen', 'title' => 'title', 'slug' => true,
+            'table' => 'posts', 'label' => 'Blog posts', 'one' => 'post', 'icon' => 'pen', 'title' => 'title', 'slug' => true, 'timestamps_created' => true,
             'order' => 'published_at DESC, id DESC', 'view' => 'post.php?slug=',
             'list' => ['image' => 'Image', 'title' => 'Title', 'category' => 'Category', 'published_at' => 'Date', 'published' => 'Status'],
             'fields' => [

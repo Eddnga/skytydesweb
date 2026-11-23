@@ -24,7 +24,7 @@ if (input('export') === 'csv') {
 }
 $list = rows('SELECT * FROM subscribers ORDER BY created_at DESC LIMIT 500');
 $total = (int) val('SELECT COUNT(*) FROM subscribers');
-admin_header('Newsletter', 'subscribers');
+admin_header('Newsletter subscribers', 'subscribers');
 ?>
 <div class="toolbar">
   <p class="muted" style="margin:0"><strong><?= $total ?></strong> people have joined from the website. Export the list to use in Mailchimp, Brevo or Gmail.</p>

@@ -9,7 +9,9 @@ $stats = [
     ['Destinations', $c('SELECT COUNT(*) FROM destinations WHERE active = 1'), 'content.php?type=destinations', 'pin'],
     ['Blog posts', $c('SELECT COUNT(*) FROM posts WHERE published = 1'), 'content.php?type=posts', 'pen'],
     ['Gallery photos', $c('SELECT COUNT(*) FROM gallery WHERE active = 1'), 'content.php?type=gallery', 'grid'],
+    ['Newsletter subscribers', $c('SELECT COUNT(*) FROM subscribers'), 'subscribers.php', 'mail'],
 ];
+$subs = rows('SELECT email, name, created_at FROM subscribers ORDER BY created_at DESC LIMIT 6');
 $pending = rows("SELECT * FROM reviews WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5");
 $leads = rows('SELECT * FROM leads ORDER BY created_at DESC LIMIT 8');
 $leads30 = (int) val('SELECT COUNT(*) FROM leads WHERE created_at >= ?', [date('Y-m-d H:i:s', time() - 30 * 86400)]);
@@ -56,6 +58,15 @@ admin_header('Welcome back, ' . explode(' ', $user['name'])[0], 'dashboard');
     <?php endif; ?>
   </section>
 </div>
+
+<section class="card">
+  <div class="card-head"><h2>Newest subscribers</h2><a href="<?= url('admin/subscribers.php') ?>">All subscribers →</a></div>
+  <?php if (!$subs): ?><p class="empty">No subscribers yet. Visitors join from the sign-up box in the website footer.</p><?php else: ?>
+  <table class="table compact"><tbody>
+    <?php foreach ($subs as $s): ?><tr><td><strong><?= h($s['email']) ?></strong><?= $s['name'] ? ' <span class="muted">· ' . h($s['name']) . '</span>' : '' ?></td><td class="right muted small nowrap"><?= h(fdate($s['created_at'], 'j M, H:i')) ?></td></tr><?php endforeach; ?>
+  </tbody></table>
+  <?php endif; ?>
+</section>
 
 <section class="card quick">
   <h2>Quick actions</h2>

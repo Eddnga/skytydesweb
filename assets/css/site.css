@@ -470,3 +470,11 @@ h1 em,h2 em,.h2 em{font-style:italic;color:var(--gold);font-weight:400}
 .host-ini{aspect-ratio:1/1!important;background:var(--sand)!important;color:var(--green)!important;font-size:64px!important;border:1px solid var(--line)}
 .host-ini::after{border-top-color:rgba(236,164,3,.7)!important;bottom:14%!important}
 .host img{aspect-ratio:1/1}
+/* text written with the dashboard editor */
+.prose .ta-center{text-align:center}.prose .ta-right{text-align:right}.prose .ta-justify{text-align:justify}
+.prose table{width:100%;border-collapse:collapse;margin:1.2em 0;font-size:.95em}
+.prose th,.prose td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left}
+.prose th{font-weight:500;color:var(--green);background:var(--sand)}
+.prose hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+.prose a{color:var(--green-2);text-decoration-color:var(--gold);text-underline-offset:3px}
+.prose u{text-decoration-color:var(--gold)}

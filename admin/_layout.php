@@ -51,7 +51,7 @@ function admin_header(string $title, string $active = ''): void
         ['content.php?type=team', 'Your hosts', 'users', 'team'],
         ['reviews.php', 'Reviews', 'quote', 'reviews', $pending],
         ['leads.php', 'WhatsApp leads', 'chat', 'leads', $newLeads],
-        ['subscribers.php', 'Newsletter', 'mail', 'subscribers'],
+        ['subscribers.php', 'Subscribers', 'mail', 'subscribers', (int) val('SELECT COUNT(*) FROM subscribers WHERE created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)])],
         ['settings.php', 'Site settings', 'cog', 'settings'],
     ];
     if ($u['role'] === 'admin') {
@@ -64,6 +64,7 @@ function admin_header(string $title, string $active = ''): void
 <meta name="robots" content="noindex,nofollow">
 <title><?= h($title) ?> · SkyTydes Dashboard</title>
 <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css">
 <link rel="icon" href="<?= asset('img/favicon.svg') ?>">
 </head><body>
 <input type="checkbox" id="navtoggle" hidden>
@@ -96,6 +97,8 @@ function admin_footer(): void
     ?>
   </div>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
 <script src="<?= asset('js/admin.js') ?>"></script>
 </body></html>
 <?php

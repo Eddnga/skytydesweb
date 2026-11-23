@@ -7,8 +7,100 @@ declare(strict_types=1);
  * Supported: ## Heading, ### Subheading, - bullet, 1. numbered, > quote,
  * **bold**, *italic*, [link text](https://...), blank line = new paragraph.
  */
+function is_rich(?string $text): bool
+{
+    return (bool) preg_match('/^\s*<(p|h[1-6]|ul|ol|blockquote|table|div|br|strong|em|b|i|u|a|span)\b/i', (string) $text);
+}
+
+/**
+ * Whitelist HTML cleaner for text written in the dashboard's rich editor.
+ * Keeps simple formatting only; removes scripts, event handlers, styles, iframes and unsafe links.
+ */
+function sanitize_html(?string $html): string
+{
+    $html = trim((string) $html);
+    if ($html === '') return '';
+    $allowed = [
+        'p' => [], 'br' => [], 'h2' => [], 'h3' => [], 'h4' => [], 'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'u' => [],
+        'ul' => [], 'ol' => [], 'li' => [], 'blockquote' => [], 'a' => ['href', 'target'], 'hr' => [],
+        'table' => [], 'thead' => [], 'tbody' => [], 'tr' => [], 'th' => ['colspan', 'rowspan'], 'td' => ['colspan', 'rowspan'],
+    ];
+    $drop = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math', 'link', 'meta', 'img', 'video', 'audio', 'noscript', 'template'];
+    $map = ['h1' => 'h2', 'h5' => 'h4', 'h6' => 'h4', 'div' => 'p'];
+
+    $doc = new DOMDocument('1.0', 'UTF-8');
+    libxml_use_internal_errors(true);
+    $doc->loadHTML('<?xml encoding="utf-8"?><div id="__root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET);
+    libxml_clear_errors();
+    $root = $doc->getElementById('__root');
+    if (!$root) return h(strip_tags($html));
+
+    $clean = function (DOMNode $node) use (&$clean, $doc, $allowed, $drop, $map) {
+        foreach (iterator_to_array($node->childNodes) as $child) {
+            if ($child instanceof DOMComment || $child instanceof DOMProcessingInstruction) {
+                $node->removeChild($child);
+                continue;
+            }
+            if (!$child instanceof DOMElement) continue;
+            $tag = strtolower($child->nodeName);
+            if (in_array($tag, $drop, true)) {
+                $node->removeChild($child);
+                continue;
+            }
+            if (isset($map[$tag])) {
+                $new = $doc->createElement($map[$tag]);
+                while ($child->firstChild) $new->appendChild($child->firstChild);
+                if ($child->hasAttribute('style')) $new->setAttribute('style', $child->getAttribute('style'));
+                $node->replaceChild($new, $child);
+                $child = $new;
+                $tag = $map[$tag];
+            }
+            if (!isset($allowed[$tag])) {
+                // unknown tag (span, font…): keep its text, drop the tag
+                $clean($child);
+                while ($child->firstChild) $node->insertBefore($child->firstChild, $child);
+                $node->removeChild($child);
+                continue;
+            }
+            // attributes
+            $align = null;
+            if (in_array($tag, ['p', 'h2', 'h3', 'h4', 'li', 'td', 'th'], true) && preg_match('/text-align:\s*(center|right|justify)/i', $child->getAttribute('style'), $m)) $align = strtolower($m[1]);
+            foreach (iterator_to_array($child->attributes) as $attr) {
+                if (!in_array(strtolower($attr->name), $allowed[$tag], true)) $child->removeAttribute($attr->name);
+            }
+            if ($align) $child->setAttribute('class', 'ta-' . $align);
+            if ($tag === 'a') {
+                $href = trim($child->getAttribute('href'));
+                if (!preg_match('#^(https?://|mailto:|tel:|/|\#|[a-z0-9\-_]+\.php)#i', $href)) {
+                    $child->removeAttribute('href');
+                }
+                if ($child->getAttribute('target') === '_blank' || preg_match('#^https?://#i', $href)) {
+                    $child->setAttribute('target', '_blank');
+                    $child->setAttribute('rel', 'noopener noreferrer');
+                } else {
+                    $child->removeAttribute('target');
+                }
+            }
+            $clean($child);
+        }
+    };
+    $clean($root);
+    $out = '';
+    foreach ($root->childNodes as $c) $out .= $doc->saveHTML($c);
+    // drop empty paragraphs the editor leaves behind
+    $out = preg_replace('#<p>(\s|&nbsp;|<br\s*/?>)*</p>#i', '', $out);
+    return trim($out);
+}
+
+/** Text for the rich editor: existing plain/markdown text is converted to HTML first. */
+function editor_value(?string $text): string
+{
+    return is_rich($text) ? sanitize_html($text) : md($text);
+}
+
 function md(?string $text): string
 {
+    if (is_rich($text)) return sanitize_html($text);
     $text = str_replace(["\r\n", "\r"], "\n", (string) $text);
     $blocks = preg_split("/\n{2,}/", trim($text));
     $out = '';

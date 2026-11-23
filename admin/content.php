@@ -76,8 +76,11 @@ if (is_post()) {
             switch ($ftype) {
                 case 'text':
                     $v = mb_substr((string) $raw, 0, 255); break;
-                case 'textarea': case 'md': case 'lines':
+                case 'textarea': case 'lines':
                     $v = mb_substr((string) $raw, 0, 60000); break;
+                case 'md':
+                    $v = sanitize_html(mb_substr((string) $raw, 0, 200000));
+                    if (trim(strip_tags($v)) === '') $v = ''; break;
                 case 'number':
                     $v = ($raw === '' || $raw === null) ? ($o['default'] ?? null) : (int) $raw; break;
                 case 'money':
@@ -202,8 +205,7 @@ if ($action === 'edit') {
           <?php elseif ($ftype === 'lines'): ?>
             <textarea id="f_<?= h($name) ?>" name="<?= h($name) ?>" rows="5"<?= $req ?>><?= h($v) ?></textarea>
           <?php elseif ($ftype === 'md'): ?>
-            <textarea id="f_<?= h($name) ?>" name="<?= h($name) ?>" rows="12" class="md"<?= $req ?>><?= h($v) ?></textarea>
-            <p class="hint">Formatting: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[link](https://…)</code>. Leave a blank line between paragraphs.</p>
+            <textarea id="f_<?= h($name) ?>" name="<?= h($name) ?>" rows="12" class="rich" data-rich><?= h(editor_value((string) $v)) ?></textarea>
           <?php elseif ($ftype === 'number'): ?>
             <input id="f_<?= h($name) ?>" type="number" name="<?= h($name) ?>" value="<?= h($v) ?>"<?= $req ?>>
           <?php elseif ($ftype === 'money'): ?>

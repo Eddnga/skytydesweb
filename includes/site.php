@@ -40,8 +40,9 @@ function stars(int $n): string
 }
 
 /** A button that opens the WhatsApp booking sheet (works without JavaScript too). */
-function wa_btn(string $label, string $source, string $item = '', string $class = 'btn wa', int $id = 0): string
+function wa_btn(string $label, string $source, ?string $item = '', string $class = 'btn wa', int $id = 0): string
 {
+    $item = (string) $item;
     $href = url('wa.php?src=' . rawurlencode($source) . ($id ? '&id=' . $id : '') . ($item !== '' && !$id ? '&item=' . rawurlencode($item) : ''));
     return '<a class="' . h($class) . '" href="' . h($href) . '" data-wa data-src="' . h($source) . '" data-id="' . $id . '" data-item="' . h($item) . '" rel="nofollow">' . sicon('wa', 20) . '<span>' . h($label) . '</span></a>';
 }
@@ -127,8 +128,9 @@ function site_header(string $title, array $o = []): void
 <?php
 }
 
-function page_hero(string $title, string $eyebrow = '', ?string $img = null, string $sub = '', array $crumbs = []): void
+function page_hero(?string $title, ?string $eyebrow = '', ?string $img = null, ?string $sub = '', array $crumbs = []): void
 {
+    $title = (string) $title; $eyebrow = (string) $eyebrow; $sub = (string) $sub;
     ?>
 <section class="phero">
   <div class="phero-bg" style="background-image:url('<?= h(upload_url($img)) ?>')"></div>

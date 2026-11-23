@@ -134,3 +134,18 @@ body.auth{display:flex;align-items:center;justify-content:center;min-height:100v
   .table td[data-l]::before{content:attr(data-l);color:var(--muted);font-size:12px}
   .table.compact tr{display:table-row}.table.compact td{display:table-cell}
 }
+/* rich text editor */
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+.note-editor.note-frame{border:1px solid #D5DAD1!important;border-radius:12px;overflow:hidden;margin-top:0;background:#fff}
+.note-editor .note-toolbar{background:#F7F8F4!important;border-bottom:1px solid var(--line)!important;padding:6px 8px!important}
+.note-btn{border-radius:8px!important;border-color:transparent!important;background:transparent!important;color:var(--green)!important}
+.note-btn:hover,.note-btn.active{background:#E9EFE3!important}
+.note-editable{font-family:'Poppins',system-ui,sans-serif!important;font-size:15px!important;line-height:1.65!important;color:var(--ink)!important;padding:18px 20px!important}
+.note-editable h2{font-family:'Lora',serif;font-size:24px;margin:18px 0 8px}
+.note-editable h3{font-family:'Lora',serif;font-size:19px;margin:16px 0 6px}
+.note-editable blockquote{border-left:3px solid var(--gold);margin:12px 0;padding:4px 0 4px 16px;font-family:'Lora',serif;font-style:italic;color:var(--green)}
+.note-editable a{color:var(--green2);text-decoration:underline}
+.note-editable table{border-collapse:collapse}.note-editable td,.note-editable th{border:1px solid var(--line);padding:6px 10px}
+.note-modal .note-modal-content{border-radius:14px}
+.note-statusbar{background:#F7F8F4!important}
+.rich-fallback{min-height:220px}

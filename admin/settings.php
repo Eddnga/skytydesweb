@@ -49,6 +49,7 @@ if (is_post()) {
     csrf_check();
     foreach ($groups as $fields) foreach ($fields as $f) {
         $v = trim((string) ($_POST[$f[0]] ?? ''));
+        if ($f[1] === 'md') $v = sanitize_html($v);
         if ($f[0] === 'whatsapp') $v = preg_replace('/\D+/', '', $v);
         if (str_starts_with($f[0], 'social_') && $v !== '' && !preg_match('#^https://#i', $v)) {
             flash('error', 'Social links must start with https://');
@@ -75,9 +76,9 @@ admin_header('Site settings', 'settings');
         <div class="field">
           <label for="s_<?= h($f[0]) ?>"><?= h($f[2]) ?></label>
           <?php if ($f[1] === 'text'): ?><input id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" value="<?= h($v) ?>">
-          <?php else: ?><textarea id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" rows="<?= $f[1] === 'md' ? 8 : 4 ?>"><?= h($v) ?></textarea><?php endif; ?>
+          <?php elseif ($f[1] === 'md'): ?><textarea id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" rows="8" class="rich" data-rich><?= h(editor_value($v)) ?></textarea>
+          <?php else: ?><textarea id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" rows="4"><?= h($v) ?></textarea><?php endif; ?>
           <?php if ($f[3]): ?><p class="hint"><?= h($f[3]) ?></p><?php endif; ?>
-          <?php if ($f[1] === 'md'): ?><p class="hint">Formatting: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>. Blank line between paragraphs.</p><?php endif; ?>
         </div>
       <?php endforeach; ?>
     </section>
