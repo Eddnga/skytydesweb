@@ -33,7 +33,7 @@
   }
 
   // reveal on scroll
-  var revealEls = $$('.sec-head, .tcard, .dcard, .scard, .rcard, .pcard, .why-item, .drow, .itin li, .ccard, .intro-grid > *');
+  var revealEls = $$('.sec-head, .tcard, .dcard, .scard, .rgrid .rcard, .pcard, .why-item, .drow, .itin li, .ccard, .intro-grid > *');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });

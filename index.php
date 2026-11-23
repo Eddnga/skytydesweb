@@ -116,7 +116,7 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
 
 
 
-<section class="sec reviews-home" id="reviews">
+<section class="sec reviews-home reviews-dark" id="reviews">
   <div class="wrap">
     <div class="sec-head"><div><p class="eyebrow">Guest reviews</p><h2 class="h2">What our <em>travellers say</em></h2></div><a class="link-more" href="<?= url('reviews.php') ?>">All reviews <?= sicon('arrow', 18) ?></a></div>
     <div class="reviews-layout">

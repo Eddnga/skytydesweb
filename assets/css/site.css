@@ -588,3 +588,18 @@ a.rsrc:hover{filter:brightness(.95)}
 .reviews-page-slider .rtrack .rcard{flex-basis:calc((100% - 48px)/2.5)}
 @media (max-width:1024px){.reviews-page-slider .rtrack .rcard{flex-basis:calc((100% - 24px)/1.6)}}
 @media (max-width:640px){.reviews-page-slider .rtrack .rcard{flex-basis:84%}}
+/* home reviews on deep green */
+.reviews-dark{background:var(--deep);color:#E9EFE6;position:relative;overflow:hidden}
+.reviews-dark::before,.reviews-dark::after{content:"";position:absolute;left:-10%;right:-10%;height:240px;border-top:1.5px solid rgba(236,164,3,.35);border-radius:50%;pointer-events:none}
+.reviews-dark::before{top:-150px}
+.reviews-dark::after{bottom:-200px;border-color:rgba(83,161,2,.35)}
+.reviews-dark>.wrap{position:relative;z-index:1}
+.reviews-dark .h2{color:#fff}
+.reviews-dark .h2 em{color:var(--gold-2)}
+.reviews-dark .link-more{color:#fff}
+.reviews-dark .rsum{border-color:transparent;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.reviews-dark .rcard{border-color:transparent;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.reviews-dark .rnav button{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.reviews-dark .rnav button:hover{background:var(--gold);border-color:var(--gold);color:var(--deep)}
+.reviews-dark .rempty{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.rtrack{padding:4px 4px 30px;margin:-4px -4px -24px}
