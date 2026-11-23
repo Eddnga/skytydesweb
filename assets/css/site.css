@@ -574,3 +574,12 @@ a.rsrc:hover{filter:brightness(.95)}
 .sheet .rform{border:0;border-radius:0;padding:38px}
 @media (max-width:1024px){.reviews-layout{grid-template-columns:minmax(0,1fr)}.sec>.wrap>.rsum{grid-template-columns:minmax(0,1fr)}.rtrack .rcard{flex-basis:calc((100% - 24px)/2)}}
 @media (max-width:640px){.rtrack .rcard,.reviews-layout .rtrack .rcard,.tour-main .rtrack .rcard{flex-basis:86%}.sheet .rform{padding:26px}.rsum-score b{font-size:52px}}
+/* platform badges with logos */
+.rsrc{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 6px}
+.rsrc-logo{width:18px;height:18px;object-fit:contain;border-radius:4px;flex-shrink:0}
+.btn.plat img{width:20px;height:20px;object-fit:contain}
+/* carousel always shows part of the next card so it clearly scrolls */
+.rtrack .rcard{flex:0 0 calc((100% - 48px)/2.6)}
+.reviews-layout .rtrack .rcard,.tour-main .rtrack .rcard{flex-basis:calc((100% - 24px)/1.6)}
+@media (max-width:1024px){.rtrack .rcard{flex-basis:calc((100% - 24px)/1.6)}}
+@media (max-width:640px){.rtrack .rcard,.reviews-layout .rtrack .rcard,.tour-main .rtrack .rcard{flex-basis:84%}}

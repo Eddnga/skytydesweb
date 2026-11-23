@@ -276,6 +276,16 @@ function review_sources(): array
     return ['website' => 'SkyTydes website', 'google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'facebook' => 'Facebook'];
 }
 
+/** Small "posted on" badge: the platform's uploaded logo (Site settings) or its name. */
+function source_badge(string $src): string
+{
+    $name = $src === 'website' ? 'Verified guest' : (review_sources()[$src] ?? 'Website');
+    $logo = $src !== 'website' ? setting('logo_' . $src) : '';
+    if ($logo) return '<img class="rsrc-logo" src="' . h(upload_url($logo)) . '" alt="' . h($name) . '"><span>' . h($name) . '</span>';
+    if ($src === 'website') return '<img class="rsrc-logo" src="' . h(asset('img/favicon-32.png')) . '" alt=""><span>' . h($name) . '</span>';
+    return '<span>' . h($name) . '</span>';
+}
+
 function time_ago(?string $d): string
 {
     if (!$d) return '';
@@ -300,8 +310,8 @@ function review_card(array $r): string
   <div class="rhead">
     <span class="ravatar c<?= $hue ?>" aria-hidden="true"><?= h($ini) ?></span>
     <div class="rwho"><b><?= h($r['name']) ?></b><small><?= $r['country'] ? h($r['country']) . ' · ' : '' ?><?= h(time_ago($r['created_at'])) ?></small></div>
-    <?php if (!empty($r['source_url'])): ?><a class="rsrc s-<?= h($src) ?>" href="<?= h($r['source_url']) ?>" target="_blank" rel="noopener noreferrer nofollow" title="Read on <?= h($srcName) ?>"><?= h($src === 'website' ? 'Verified guest' : $srcName) ?></a>
-    <?php else: ?><span class="rsrc s-<?= h($src) ?>"><?= h($src === 'website' ? 'Verified guest' : $srcName) ?></span><?php endif; ?>
+    <?php if (!empty($r['source_url'])): ?><a class="rsrc s-<?= h($src) ?>" href="<?= h($r['source_url']) ?>" target="_blank" rel="noopener noreferrer nofollow" title="Read on <?= h($srcName) ?>"><?= source_badge($src) ?></a>
+    <?php else: ?><span class="rsrc s-<?= h($src) ?>"><?= source_badge($src) ?></span><?php endif; ?>
   </div>
   <?= stars((int) $r['rating']) ?>
   <?php if ($r['title']): ?><h3><?= h($r['title']) ?></h3><?php endif; ?>
@@ -327,10 +337,10 @@ function review_summary(bool $withWrite = true): string
 {
     $st = review_stats();
     $links = [];
-    if (setting('google_write_url')) $links[] = ['Review us on Google', setting('google_write_url')];
-    elseif (setting('google_reviews_url')) $links[] = ['See us on Google', setting('google_reviews_url')];
-    if (setting('tripadvisor_url')) $links[] = ['Tripadvisor', setting('tripadvisor_url')];
-    if (setting('facebook_reviews_url')) $links[] = ['Facebook', setting('facebook_reviews_url')];
+    if (setting('google_write_url')) $links[] = ['Review us on Google', setting('google_write_url'), 'google'];
+    elseif (setting('google_reviews_url')) $links[] = ['See us on Google', setting('google_reviews_url'), 'google'];
+    if (setting('tripadvisor_url')) $links[] = ['Review us on Tripadvisor', setting('tripadvisor_url'), 'tripadvisor'];
+    if (setting('facebook_reviews_url')) $links[] = ['Review us on Facebook', setting('facebook_reviews_url'), 'facebook'];
     ob_start(); ?>
 <div class="rsum">
   <?php if ($st['n']): ?>
@@ -345,7 +355,7 @@ function review_summary(bool $withWrite = true): string
   <?php endif; ?>
   <div class="rsum-cta">
     <?php if ($withWrite): ?><a class="btn gold" href="<?= url('reviews.php?write=1#write') ?>" data-review-open><?= sicon('star', 18) ?> Write a review</a><?php endif; ?>
-    <?php foreach ($links as $l): ?><a class="btn ghost sm" href="<?= h($l[1]) ?>" target="_blank" rel="noopener noreferrer"><?= h($l[0]) ?> ↗</a><?php endforeach; ?>
+    <?php foreach ($links as $l): $lg = setting('logo_' . $l[2]); ?><a class="btn ghost sm plat" href="<?= h($l[1]) ?>" target="_blank" rel="noopener noreferrer"><?php if ($lg): ?><img src="<?= h(upload_url($lg)) ?>" alt=""><?php endif; ?><?= h($l[0]) ?> ↗</a><?php endforeach; ?>
   </div>
 </div>
 <?php return ob_get_clean();

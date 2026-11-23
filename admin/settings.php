@@ -51,11 +51,32 @@ $groups = [
         ['facebook_reviews_url', 'text', 'Facebook reviews link', ''],
         ['review_notice', 'textarea', 'Message shown after a visitor submits a review', ''],
     ],
+    'Review platform logos' => [
+        ['logo_google', 'image', 'Google logo', 'Upload the official Google "G" logo (PNG with a transparent background). It appears on Google review cards and buttons.'],
+        ['logo_tripadvisor', 'image', 'Tripadvisor logo', 'Upload the official Tripadvisor logo or owl icon (PNG).'],
+        ['logo_facebook', 'image', 'Facebook logo', 'Upload the official Facebook "f" logo (PNG).'],
+    ],
 ];
 
 if (is_post()) {
     csrf_check();
     foreach ($groups as $fields) foreach ($fields as $f) {
+        if ($f[1] === 'image') {
+            if (!empty($_FILES[$f[0]]) && $_FILES[$f[0]]['error'] !== UPLOAD_ERR_NO_FILE) {
+                try {
+                    $new = store_image($_FILES[$f[0]]);
+                    delete_image(setting($f[0]) ?: null);
+                    set_setting($f[0], $new);
+                } catch (RuntimeException $e) {
+                    flash('error', $f[2] . ': ' . $e->getMessage());
+                    redirect('admin/settings.php');
+                }
+            } elseif (isset($_POST[$f[0] . '_remove'])) {
+                delete_image(setting($f[0]) ?: null);
+                set_setting($f[0], '');
+            }
+            continue;
+        }
         $v = trim((string) ($_POST[$f[0]] ?? ''));
         if ($f[1] === 'md') $v = sanitize_html($v);
         if ($f[0] === 'whatsapp') $v = preg_replace('/\D+/', '', $v);
@@ -75,7 +96,7 @@ if (is_post()) {
 }
 admin_header('Site settings', 'settings');
 ?>
-<form method="post" class="form">
+<form method="post" class="form" enctype="multipart/form-data">
   <?= csrf_field() ?>
   <?php foreach ($groups as $g => $fields): ?>
     <section class="card edit">
@@ -83,7 +104,13 @@ admin_header('Site settings', 'settings');
       <?php foreach ($fields as $f): $v = setting($f[0]); ?>
         <div class="field">
           <label for="s_<?= h($f[0]) ?>"><?= h($f[2]) ?></label>
-          <?php if ($f[1] === 'text'): ?><input id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" value="<?= h($v) ?>">
+          <?php if ($f[1] === 'image'): ?>
+            <div class="imgfield logo-field">
+              <?php if ($v): ?><img src="<?= h(upload_url($v)) ?>" alt="" class="preview logo-prev" data-preview="s_<?= h($f[0]) ?>"><?php else: ?><span class="preview logo-prev empty" data-preview="s_<?= h($f[0]) ?>">No logo yet</span><?php endif; ?>
+              <div><input id="s_<?= h($f[0]) ?>" type="file" name="<?= h($f[0]) ?>" accept="image/png,image/webp,image/jpeg">
+                <?php if ($v): ?><label class="check small"><input type="checkbox" name="<?= h($f[0]) ?>_remove" value="1"> Remove logo</label><?php endif; ?></div>
+            </div>
+          <?php elseif ($f[1] === 'text'): ?><input id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" value="<?= h($v) ?>">
           <?php elseif ($f[1] === 'md'): ?><textarea id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" rows="8" class="rich" data-rich><?= h(editor_value($v)) ?></textarea>
           <?php else: ?><textarea id="s_<?= h($f[0]) ?>" name="<?= h($f[0]) ?>" rows="4"><?= h($v) ?></textarea><?php endif; ?>
           <?php if ($f[3]): ?><p class="hint"><?= h($f[3]) ?></p><?php endif; ?>
