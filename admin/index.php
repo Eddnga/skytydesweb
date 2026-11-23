@@ -71,8 +71,8 @@ admin_header('Welcome back, ' . explode(' ', $user['name'])[0], 'dashboard');
 <section class="card quick">
   <h2>Quick actions</h2>
   <div class="row-gap">
-    <a class="btn ghost" href="<?= url('admin/content.php?type=tours&action=edit') ?>"><?= icon('plus', 16) ?> New tour</a>
-    <a class="btn ghost" href="<?= url('admin/content.php?type=posts&action=edit') ?>"><?= icon('plus', 16) ?> New blog post</a>
+    <a class="btn ghost" href="<?= url('admin/content.php?type=tours&add=1') ?>"><?= icon('plus', 16) ?> New tour</a>
+    <a class="btn ghost" href="<?= url('admin/content.php?type=posts&add=1') ?>"><?= icon('plus', 16) ?> New blog post</a>
     <a class="btn ghost" href="<?= url('admin/content.php?type=gallery') ?>"><?= icon('plus', 16) ?> Upload photos</a>
     <a class="btn ghost" href="<?= url('admin/content.php?type=hero') ?>"><?= icon('image', 16) ?> Change hero images</a>
   </div>

@@ -50,6 +50,9 @@
         height: ta.closest('.card').length && ta.attr('rows') > 10 ? 380 : 240,
         placeholder: 'Start writing…',
         disableDragAndDrop: true,
+        dialogsInBody: false,
+        codeviewFilter: true,
+        codeviewIframeFilter: true,
         styleTags: [
           { title: 'Paragraph', tag: 'p', value: 'p' },
           { title: 'Heading', tag: 'h2', value: 'h2' },
@@ -61,7 +64,7 @@
           ['font', ['bold', 'italic', 'underline', 'clear']],
           ['para', ['ul', 'ol', 'paragraph']],
           ['insert', ['link', 'table', 'hr']],
-          ['view', ['undo', 'redo', 'fullscreen']]
+          ['view', ['undo', 'redo', 'codeview', 'fullscreen']]
         ],
         callbacks: {
           onChange: function () { dirty = true; },
@@ -73,17 +76,55 @@
     jQuery('form').on('submit', function () {
       jQuery(this).find('[data-rich]').each(function () {
         var el = jQuery(this);
-        if (el.next('.note-editor').length) el.val(el.summernote('isEmpty') ? '' : el.summernote('code'));
+        if (!el.next('.note-editor').length) return;
+        if (el.summernote('codeview.isActivated')) el.summernote('codeview.deactivate');
+        el.val(el.summernote('isEmpty') ? '' : el.summernote('code'));
       });
     });
   } else {
     document.querySelectorAll('[data-rich]').forEach(function (t) { t.classList.add('rich-fallback'); });
   }
   // warn about unsaved changes on edit forms
-  var ef = document.querySelector('form.edit') || document.querySelector('form.form textarea[data-rich]') && document.querySelector('form.form');
+  var ef = document.querySelector('.content > form.edit, .content > form.form');
   if (ef) {
     ef.addEventListener('input', function () { dirty = true; });
     ef.addEventListener('submit', function () { dirty = false; });
     window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   }
+  // pop-up (modal) forms
+  var lastFocus = null;
+  var openModal = function (m) {
+    if (!m) return;
+    lastFocus = document.activeElement;
+    m.hidden = false;
+    document.body.classList.add('modal-open');
+    var first = m.querySelector('input:not([type=hidden]):not([type=checkbox]), select, textarea');
+    setTimeout(function () { if (first) first.focus(); }, 60);
+  };
+  var closeModal = function (m) {
+    if (!m || m.hidden) return;
+    var f = m.querySelector('form');
+    if (f && f.dataset.dirty === '1' && !confirm('Close without saving?')) return;
+    m.hidden = true;
+    document.body.classList.remove('modal-open');
+    if (lastFocus) lastFocus.focus();
+  };
+  document.querySelectorAll('[data-modal-open]').forEach(function (b) {
+    b.addEventListener('click', function (e) { e.preventDefault(); openModal(document.getElementById(b.dataset.modalOpen)); });
+  });
+  document.querySelectorAll('.modal').forEach(function (m) {
+    m.querySelectorAll('[data-modal-close]').forEach(function (b) { b.addEventListener('click', function () { closeModal(m); }); });
+    m.addEventListener('mousedown', function (e) { if (e.target === m) closeModal(m); });
+    var f = m.querySelector('form');
+    if (f) {
+      f.addEventListener('input', function () { f.dataset.dirty = '1'; });
+      f.addEventListener('submit', function () { f.dataset.dirty = ''; dirty = false; });
+    }
+    if (m.hasAttribute('data-autoopen')) openModal(m);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var m = document.querySelector('.modal:not([hidden])');
+    if (m && !document.querySelector('.note-editor.fullscreen')) closeModal(m);
+  });
 })();

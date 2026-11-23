@@ -38,6 +38,7 @@ if (is_post()) {
 $list = rows('SELECT * FROM users ORDER BY name');
 admin_header('Users', 'users');
 ?>
+<div class="toolbar"><span></span><button type="button" class="btn" data-modal-open="addModal"><?= icon('plus', 18) ?> Add user</button></div>
 <p class="muted"><strong>Admins</strong> can do everything. <strong>Editors</strong> can manage content, reviews and leads, but not users or the activity log.</p>
 <div class="card table-wrap">
 <table class="table">
@@ -63,8 +64,10 @@ admin_header('Users', 'users');
   </tbody>
 </table>
 </div>
-<section class="card edit">
-  <h2 class="sub">Add a user</h2>
+<div class="modal" id="addModal" hidden>
+  <div class="modal-box narrow" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="modal-head"><h2 id="addTitle">Add a user</h2><button type="button" class="ib" data-modal-close aria-label="Close"><?= icon('x', 22) ?></button></div>
+  <div class="modal-body">
   <form method="post" class="form" autocomplete="off">
     <?= csrf_field() ?><input type="hidden" name="do" value="create">
     <div class="grid2">
@@ -73,7 +76,8 @@ admin_header('Users', 'users');
       <label>Temporary password<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
       <label>Role<select name="role"><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
     </div>
-    <button class="btn"><?= icon('plus', 18) ?> Add user</button>
+    <div class="actions"><button class="btn"><?= icon('plus', 18) ?> Add user</button><button type="button" class="btn ghost" data-modal-close>Cancel</button></div>
   </form>
-</section>
+  </div></div>
+</div>
 <?php admin_footer();

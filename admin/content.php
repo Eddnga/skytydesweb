@@ -123,6 +123,7 @@ if (is_post()) {
         if ($errors) {
             $_SESSION['old'] = $_POST;
             flash('error', implode(' ', $errors));
+            if (!$id && isset($_POST['modal'])) redirect($self . '&add=1');
             redirect($self . '&action=edit' . ($id ? '&id=' . $id : ''));
         }
         if (!empty($E['timestamps'])) {
@@ -172,21 +173,17 @@ function list_cell(string $col, array $r, array $E): string
     return h(excerpt((string) $v, 70));
 }
 
-if ($action === 'edit') {
-    $rec = $id ? row("SELECT * FROM $T WHERE id = ?", [$id]) : null;
-    if ($id && !$rec) redirect($self);
-    $old = $_SESSION['old'] ?? null;
-    unset($_SESSION['old']);
+function edit_form(array $E, string $self, ?array $rec, ?array $old, int $id, bool $modal): void
+{
     $val = function ($name, $default = '') use ($rec, $old) {
         if ($old !== null && array_key_exists($name, $old)) return $old[$name];
         return $rec[$name] ?? $default;
     };
-    admin_header(($id ? 'Edit ' : 'New ') . $E['one'], $type);
     ?>
-    <p><a href="<?= url($self) ?>" class="back">← All <?= h(strtolower($E['label'])) ?></a></p>
-    <form method="post" enctype="multipart/form-data" class="form card edit">
+    <form method="post" action="<?= url($self . '&action=edit' . ($id ? '&id=' . $id : '')) ?>" enctype="multipart/form-data" class="form edit<?= $modal ? '' : ' card' ?>">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="edit">
+      <?php if ($modal): ?><input type="hidden" name="modal" value="1"><?php endif; ?>
       <?php foreach ($E['fields'] as $f):
           [$name, $ftype, $label] = $f;
           $o = field_opts($f);
@@ -261,13 +258,31 @@ if ($action === 'edit') {
         </div>
       <?php endif; ?>
 
+      <?php if ($modal): ?>
+      <div class="actions sticky">
+        <button class="btn" name="save_close" value="1"><?= icon('check', 18) ?> Add <?= h($E['one']) ?></button>
+        <button type="button" class="btn ghost" data-modal-close>Cancel</button>
+      </div>
+      <?php else: ?>
       <div class="actions sticky">
         <button class="btn"><?= icon('check', 18) ?> Save</button>
         <button class="btn ghost" name="save_close" value="1">Save &amp; close</button>
         <?php if ($id && !empty($E['view']) && $rec): ?><a class="btn ghost" target="_blank" rel="noopener" href="<?= url($E['view'] . rawurlencode($rec['slug'])) ?>"><?= icon('eye', 18) ?> View</a><?php endif; ?>
       </div>
+      <?php endif; ?>
     </form>
     <?php
+}
+
+if ($action === 'edit') {
+    $rec = $id ? row("SELECT * FROM $T WHERE id = ?", [$id]) : null;
+    if ($id && !$rec) redirect($self);
+    $old = $_SESSION['old'] ?? null;
+    unset($_SESSION['old']);
+    admin_header(($id ? 'Edit ' : 'New ') . $E['one'], $type);
+    ?>
+    <p><a href="<?= url($self) ?>" class="back">← All <?= h(strtolower($E['label'])) ?></a></p>
+    <?php edit_form($E, $self, $rec, $old, $id, false);
     admin_footer();
     exit;
 }
@@ -288,7 +303,7 @@ admin_header($E['label'], $type);
 ?>
 <div class="toolbar">
   <form method="get" class="search"><input type="hidden" name="type" value="<?= h($type) ?>"><input name="q" value="<?= h($search) ?>" placeholder="Search <?= h(strtolower($E['label'])) ?>…"></form>
-  <a class="btn" href="<?= url($self . '&action=edit') ?>"><?= icon('plus', 18) ?> Add <?= h($E['one']) ?></a>
+  <a class="btn" href="<?= url($self . '&action=edit') ?>" data-modal-open="addModal"><?= icon('plus', 18) ?> Add <?= h($E['one']) ?></a>
 </div>
 <?php if (!empty($E['help'])): ?><p class="muted"><?= h($E['help']) ?></p><?php endif; ?>
 <?php if (!empty($E['bulk_upload'])): ?>
@@ -302,7 +317,7 @@ admin_header($E['label'], $type);
 <?php endif; ?>
 <div class="card table-wrap">
 <?php if (!$list): ?>
-  <p class="empty">Nothing here yet. <a href="<?= url($self . '&action=edit') ?>">Add the first <?= h($E['one']) ?></a>.</p>
+  <p class="empty">Nothing here yet. <a href="<?= url($self . '&action=edit') ?>" data-modal-open="addModal">Add the first <?= h($E['one']) ?></a>.</p>
 <?php else: ?>
 <table class="table">
   <thead><tr><?php foreach ($E['list'] as $c => $lab): ?><th><?= h($lab) ?></th><?php endforeach; ?><th class="right">Actions</th></tr></thead>
@@ -324,4 +339,11 @@ admin_header($E['label'], $type);
 <?php if ($total > $per): ?>
 <nav class="pager"><?php for ($i = 1; $i <= ceil($total / $per); $i++): ?><a class="<?= $i === $page ? 'on' : '' ?>" href="<?= url($self . '&p=' . $i . ($search !== '' ? '&q=' . rawurlencode($search) : '')) ?>"><?= $i ?></a><?php endfor; ?></nav>
 <?php endif; ?>
+<?php $addOld = input('add') === '1' ? ($_SESSION['old'] ?? null) : null; unset($_SESSION['old']); ?>
+<div class="modal" id="addModal" hidden<?= input('add') === '1' ? ' data-autoopen' : '' ?>>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <div class="modal-head"><h2 id="addTitle">Add <?= h($E['one']) ?></h2><button type="button" class="ib" data-modal-close aria-label="Close"><?= icon('x', 22) ?></button></div>
+    <div class="modal-body"><?php edit_form($E, $self, null, $addOld, 0, true); ?></div>
+  </div>
+</div>
 <?php admin_footer();
