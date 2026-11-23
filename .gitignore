@@ -1,0 +1,22 @@
+# ---- secrets & per-server settings (each computer/server has its own) ----
+config.php
+
+# ---- runtime data (never commit) ----
+storage/*
+!storage/.htaccess
+!storage/index.html
+*.sqlite
+*.log
+
+# ---- images uploaded from the dashboard live only on the server ----
+uploads/*
+!uploads/.htaccess
+!uploads/index.html
+!uploads/seed/
+
+# ---- OS / editor clutter ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/

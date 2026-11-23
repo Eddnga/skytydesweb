@@ -1,0 +1,8 @@
+# cPanel → Git Version Control → "Deploy HEAD Commit" copies the site into public_html.
+# config.php, storage/ and uploaded images on the server are never touched or deleted.
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/public_html/
+    - /bin/mkdir -p $DEPLOYPATH/uploads $DEPLOYPATH/storage
+    - /bin/rsync -rlt --exclude='.git' --exclude='.cpanel.yml' --exclude='.gitignore' --exclude='config.php' --exclude='storage/*.sqlite' --exclude='README.md' ./ $DEPLOYPATH
