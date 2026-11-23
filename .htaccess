@@ -7,6 +7,8 @@ ServerSignature Off
 <FilesMatch "^(config\.php|config\.sample\.php|.*\.sqlite|.*\.log|.*\.lock|\.ht.*|\.env|composer\.(json|lock))$">
   Require all denied
 </FilesMatch>
+# Hide every dotfile/dotfolder (.my.cnf, .gitignore, .cpanel.yml, .git) except .well-known (SSL checks)
+RedirectMatch 403 (^|/)\.(?!well-known/)
 RedirectMatch 403 ^/?(includes|storage)(/|$)
 RedirectMatch 403 /install/(schema|seed)\.php$
 
