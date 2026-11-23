@@ -271,15 +271,97 @@ function post_card(array $p): string
 <?php return ob_get_clean();
 }
 
+function review_sources(): array
+{
+    return ['website' => 'SkyTydes website', 'google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'facebook' => 'Facebook'];
+}
+
+function time_ago(?string $d): string
+{
+    if (!$d) return '';
+    $s = time() - strtotime($d);
+    if ($s < 86400) return 'today';
+    $days = (int) floor($s / 86400);
+    if ($days < 7) return $days === 1 ? 'yesterday' : $days . ' days ago';
+    if ($days < 30) return (int) floor($days / 7) === 1 ? 'a week ago' : (int) floor($days / 7) . ' weeks ago';
+    if ($days < 365) return (int) floor($days / 30) <= 1 ? 'a month ago' : (int) floor($days / 30) . ' months ago';
+    return (int) floor($days / 365) === 1 ? 'a year ago' : (int) floor($days / 365) . ' years ago';
+}
+
 function review_card(array $r): string
 {
+    $src = $r['source'] ?? 'website';
+    $srcName = review_sources()[$src] ?? 'Website';
+    $ini = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), array_slice(preg_split('/\s+/', trim($r['name'])), 0, 2))));
+    $hue = abs(crc32($r['name'])) % 4;
+    $long = mb_strlen((string) $r['body']) > 260;
     ob_start(); ?>
 <figure class="rcard">
+  <div class="rhead">
+    <span class="ravatar c<?= $hue ?>" aria-hidden="true"><?= h($ini) ?></span>
+    <div class="rwho"><b><?= h($r['name']) ?></b><small><?= $r['country'] ? h($r['country']) . ' · ' : '' ?><?= h(time_ago($r['created_at'])) ?></small></div>
+    <?php if (!empty($r['source_url'])): ?><a class="rsrc s-<?= h($src) ?>" href="<?= h($r['source_url']) ?>" target="_blank" rel="noopener noreferrer nofollow" title="Read on <?= h($srcName) ?>"><?= h($src === 'website' ? 'Verified guest' : $srcName) ?></a>
+    <?php else: ?><span class="rsrc s-<?= h($src) ?>"><?= h($src === 'website' ? 'Verified guest' : $srcName) ?></span><?php endif; ?>
+  </div>
   <?= stars((int) $r['rating']) ?>
   <?php if ($r['title']): ?><h3><?= h($r['title']) ?></h3><?php endif; ?>
-  <blockquote><?= nl2br(h(excerpt($r['body'], 420))) ?></blockquote>
-  <figcaption><b><?= h($r['name']) ?></b><?= $r['country'] ? ' · ' . h($r['country']) : '' ?><?= !empty($r['tour']) ? '<span>' . h($r['tour']) . '</span>' : '' ?></figcaption>
+  <blockquote class="<?= $long ? 'clamp' : '' ?>"><?= nl2br(h($r['body'])) ?></blockquote>
+  <?php if ($long): ?><button type="button" class="rmore" data-more>Read more</button><?php endif; ?>
+  <?php if (!empty($r['tour'])): ?><figcaption><?= sicon('pin', 14) ?><?= h($r['tour']) ?></figcaption><?php endif; ?>
 </figure>
+<?php return ob_get_clean();
+}
+
+function review_stats(): array
+{
+    $rows = rows("SELECT rating, COUNT(*) n FROM reviews WHERE status = 'approved' GROUP BY rating");
+    $dist = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+    foreach ($rows as $r) $dist[max(1, min(5, (int) $r['rating']))] += (int) $r['n'];
+    $n = array_sum($dist);
+    $avg = $n ? array_sum(array_map(fn($k, $v) => $k * $v, array_keys($dist), $dist)) / $n : 0;
+    return ['n' => $n, 'avg' => $avg, 'dist' => $dist];
+}
+
+/** Google-style summary: big score, stars, bars, and platform buttons. */
+function review_summary(bool $withWrite = true): string
+{
+    $st = review_stats();
+    $links = [];
+    if (setting('google_write_url')) $links[] = ['Review us on Google', setting('google_write_url')];
+    elseif (setting('google_reviews_url')) $links[] = ['See us on Google', setting('google_reviews_url')];
+    if (setting('tripadvisor_url')) $links[] = ['Tripadvisor', setting('tripadvisor_url')];
+    if (setting('facebook_reviews_url')) $links[] = ['Facebook', setting('facebook_reviews_url')];
+    ob_start(); ?>
+<div class="rsum">
+  <?php if ($st['n']): ?>
+  <div class="rsum-score"><b><?= h(number_format($st['avg'], 1)) ?></b><?= stars((int) round($st['avg'])) ?><span><?= $st['n'] ?> review<?= $st['n'] === 1 ? '' : 's' ?></span></div>
+  <div class="rsum-bars">
+    <?php foreach ($st['dist'] as $k => $v): $pct = $st['n'] ? round($v / $st['n'] * 100) : 0; ?>
+      <div class="rbar"><span><?= $k ?></span><i><em style="width:<?= $pct ?>%"></em></i><small><?= $v ?></small></div>
+    <?php endforeach; ?>
+  </div>
+  <?php else: ?>
+  <div class="rsum-empty"><b>Be the first to review</b><span>Travelled with us? Tell others how it went.</span></div>
+  <?php endif; ?>
+  <div class="rsum-cta">
+    <?php if ($withWrite): ?><a class="btn gold" href="<?= url('reviews.php?write=1#write') ?>" data-review-open><?= sicon('star', 18) ?> Write a review</a><?php endif; ?>
+    <?php foreach ($links as $l): ?><a class="btn ghost sm" href="<?= h($l[1]) ?>" target="_blank" rel="noopener noreferrer"><?= h($l[0]) ?> ↗</a><?php endforeach; ?>
+  </div>
+</div>
+<?php return ob_get_clean();
+}
+
+/** Sliding carousel of review cards. */
+function reviews_slider(array $reviews): string
+{
+    if (!$reviews) return '';
+    ob_start(); ?>
+<div class="rslider" data-rslider>
+  <div class="rtrack"><?php foreach ($reviews as $r) echo review_card($r); ?></div>
+  <?php if (count($reviews) > 1): ?>
+  <div class="rnav"><button type="button" class="rprev" aria-label="Previous reviews">‹</button><button type="button" class="rnext" aria-label="Next reviews">›</button></div>
+  <?php endif; ?>
+</div>
 <?php return ob_get_clean();
 }
 

@@ -45,6 +45,10 @@ $groups = [
         ['newsletter_body', 'textarea', 'Newsletter text', ''],
     ],
     'Reviews' => [
+        ['google_reviews_url', 'text', 'Google reviews link', 'Your Google Business Profile reviews page. Shows a "See us on Google" button.'],
+        ['google_write_url', 'text', 'Google "write a review" link', 'From Google Business Profile → Ask for reviews. Shows a "Review us on Google" button.'],
+        ['tripadvisor_url', 'text', 'TripAdvisor link', 'Your TripAdvisor listing.'],
+        ['facebook_reviews_url', 'text', 'Facebook reviews link', ''],
         ['review_notice', 'textarea', 'Message shown after a visitor submits a review', ''],
     ],
 ];
@@ -55,7 +59,7 @@ if (is_post()) {
         $v = trim((string) ($_POST[$f[0]] ?? ''));
         if ($f[1] === 'md') $v = sanitize_html($v);
         if ($f[0] === 'whatsapp') $v = preg_replace('/\D+/', '', $v);
-        if (str_starts_with($f[0], 'social_') && $v !== '' && !preg_match('#^https://#i', $v)) {
+        if ((str_starts_with($f[0], 'social_') || str_ends_with($f[0], '_url')) && $v !== '' && !preg_match('#^https://#i', $v)) {
             flash('error', 'Social links must start with https://');
             redirect('admin/settings.php');
         }

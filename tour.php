@@ -52,7 +52,8 @@ site_header($t['title'], ['active' => 'tours', 'desc' => $t['summary'] ?: excerp
         <?php if ($exc): ?><div><h2 class="h3">Not included</h2><ul class="ticks no"><?php foreach ($exc as $l): ?><li><?= sicon('x', 18) ?><?= h($l) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
       </div>
       <?php endif; ?>
-      <?php if ($reviews): ?><h2 class="h3">Reviews</h2><div class="rgrid two"><?php foreach ($reviews as $r) echo review_card($r); ?></div><?php endif; ?>
+      <?php if ($reviews): ?><h2 class="h3">Reviews</h2><?= reviews_slider($reviews) ?><?php endif; ?>
+      <p class="tour-review"><a class="link-more" href="<?= url('reviews.php?write=1&tour=' . (int) $t['id'] . '#write') ?>"><?= sicon('star', 16) ?> Been on this trip? Write a review</a></p>
     </div>
     <aside class="book">
       <div class="book-card">

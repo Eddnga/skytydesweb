@@ -29,49 +29,57 @@ if (is_post()) {
                 'status' => 'pending', 'ip' => client_ip(), 'created_at' => now()]);
         }
         flash('review', setting('review_notice', 'Thank you! Your review will appear once approved.'));
-        redirect('reviews.php#write');
+        redirect('reviews.php');
     }
 }
 
-$reviews = rows("SELECT r.*, t.title tour FROM reviews r LEFT JOIN tours t ON t.id = r.tour_id WHERE r.status = 'approved' ORDER BY r.approved_at DESC LIMIT 60");
-$n = count($reviews);
-$avg = $n ? round(array_sum(array_column($reviews, 'rating')) / $n, 1) : 0;
+$src = array_key_exists(input('src'), review_sources()) ? input('src') : '';
+$reviews = rows("SELECT r.*, t.title tour FROM reviews r LEFT JOIN tours t ON t.id = r.tour_id WHERE r.status = 'approved'" . ($src ? ' AND r.source = ?' : '') . " ORDER BY r.created_at DESC LIMIT 120", $src ? [$src] : []);
+$srcCounts = [];
+foreach (rows("SELECT source, COUNT(*) n FROM reviews WHERE status = 'approved' GROUP BY source") as $r) $srcCounts[$r['source']] = (int) $r['n'];
 $tours = rows('SELECT id, title FROM tours WHERE active = 1 ORDER BY title');
+$preTour = (int) ($old['tour_id'] ?? input('tour'));
 $ts = (string) time();
+$openForm = $errors || input('write') === '1';
 site_header('Reviews', ['active' => 'reviews', 'desc' => 'Read reviews from SkyTydes Safaris travellers and share your own experience.']);
-page_hero('Guest reviews', 'In their words', val('SELECT image FROM gallery WHERE active = 1 ORDER BY sort LIMIT 1 OFFSET 1') ?: null);
+page_hero('Guest *reviews*', 'In their words', val('SELECT image FROM gallery WHERE active = 1 ORDER BY sort LIMIT 1 OFFSET 1') ?: null);
 ?>
 <section class="sec">
   <div class="wrap">
-    <?php if ($n): ?>
-      <p class="rating-sum big"><?= stars((int) round($avg)) ?> <b><?= h(number_format($avg, 1)) ?></b> average from <?= $n ?> review<?= $n === 1 ? '' : 's' ?></p>
-      <div class="rgrid"><?php foreach ($reviews as $r) echo review_card($r); ?></div>
-    <?php else: ?>
-      <p class="muted center">No reviews yet — be the first to share your SkyTydes experience.</p>
-    <?php endif; ?>
-  </div>
-</section>
-<section class="sec tint" id="write">
-  <div class="wrap narrow">
-    <div class="sec-head center"><div><p class="eyebrow">Travelled with us?</p><h2 class="h2">Write a review</h2><p class="muted">Reviews are checked by our team before they appear on the site.</p></div></div>
     <?php if ($m = flash('review')): ?><div class="alert ok" role="status"><?= h($m) ?></div><?php endif; ?>
-    <?php foreach ($errors as $e): ?><div class="alert error" role="alert"><?= h($e) ?></div><?php endforeach; ?>
-    <form method="post" action="<?= url('reviews.php#write') ?>" class="rform">
-      <?= csrf_field() ?>
-      <input type="hidden" name="ts" value="<?= h($ts) ?>"><input type="hidden" name="sig" value="<?= h($sign($ts)) ?>">
-      <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
-      <fieldset class="rate"><legend>Your rating</legend>
-        <?php for ($i = 5; $i >= 1; $i--): ?><input type="radio" id="r<?= $i ?>" name="rating" value="<?= $i ?>" <?= (int) ($old['rating'] ?? 0) === $i ? 'checked' : '' ?> required><label for="r<?= $i ?>" title="<?= $i ?> star<?= $i > 1 ? 's' : '' ?>">★</label><?php endfor; ?>
-      </fieldset>
-      <div class="sheet-grid two">
-        <label>Your name<input name="name" required maxlength="120" value="<?= h($old['name'] ?? '') ?>" autocomplete="name"></label>
-        <label>Country <span class="opt">(optional)</span><input name="country" maxlength="80" value="<?= h($old['country'] ?? '') ?>" autocomplete="country-name"></label>
-      </div>
-      <?php if ($tours): ?><label>Which trip? <span class="opt">(optional)</span><select name="tour_id"><option value="">— Select a trip —</option><?php foreach ($tours as $t): ?><option value="<?= (int) $t['id'] ?>" <?= (int) ($old['tour_id'] ?? 0) === (int) $t['id'] ? 'selected' : '' ?>><?= h($t['title']) ?></option><?php endforeach; ?></select></label><?php endif; ?>
-      <label>Title <span class="opt">(optional)</span><input name="title" maxlength="160" value="<?= h($old['title'] ?? '') ?>" placeholder="e.g. The best weekend ever"></label>
-      <label>Your review<textarea name="body" rows="5" required minlength="20" maxlength="3000" placeholder="Tell others about your trip…"><?= h($old['body'] ?? '') ?></textarea></label>
-      <button class="btn dark lg">Submit review</button>
-    </form>
+    <?= review_summary() ?>
+    <?php if (count($srcCounts) > 1): ?>
+      <nav class="chips rchips" aria-label="Filter reviews">
+        <a href="<?= url('reviews.php') ?>" class="<?= $src === '' ? 'on' : '' ?>">All <small><?= array_sum($srcCounts) ?></small></a>
+        <?php foreach (review_sources() as $k => $lab): if (empty($srcCounts[$k])) continue; ?><a href="<?= url('reviews.php?src=' . $k) ?>" class="<?= $src === $k ? 'on' : '' ?>"><?= h($k === 'website' ? 'Website' : $lab) ?> <small><?= $srcCounts[$k] ?></small></a><?php endforeach; ?>
+      </nav>
+    <?php endif; ?>
+    <?php if ($reviews): ?><div class="rgrid"><?php foreach ($reviews as $r) echo review_card($r); ?></div>
+    <?php else: ?><p class="muted center rempty-page">No reviews yet — be the first to share your SkyTydes experience.</p><?php endif; ?>
   </div>
 </section>
+
+<dialog class="sheet wide" id="write" aria-labelledby="writeTitle"<?= $openForm ? ' data-autoopen' : '' ?>>
+  <form method="post" action="<?= url('reviews.php') ?>" class="sheet-in rform">
+    <button type="button" class="sheet-x" data-close aria-label="Close"><?= sicon('x', 22) ?></button>
+    <p class="eyebrow">Travelled with us?</p>
+    <h2 id="writeTitle">Write a review</h2>
+    <p class="muted small">Reviews are checked by our team before they appear on the site.</p>
+    <?php foreach ($errors as $e): ?><div class="alert error" role="alert"><?= h($e) ?></div><?php endforeach; ?>
+    <?= csrf_field() ?>
+    <input type="hidden" name="ts" value="<?= h($ts) ?>"><input type="hidden" name="sig" value="<?= h($sign($ts)) ?>">
+    <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <fieldset class="rate"><legend>Your rating</legend>
+      <?php for ($i = 5; $i >= 1; $i--): ?><input type="radio" id="r<?= $i ?>" name="rating" value="<?= $i ?>" <?= (int) ($old['rating'] ?? 0) === $i ? 'checked' : '' ?> required><label for="r<?= $i ?>" title="<?= $i ?> star<?= $i > 1 ? 's' : '' ?>">★</label><?php endfor; ?>
+    </fieldset>
+    <div class="sheet-grid two">
+      <label>Your name<input name="name" required maxlength="120" value="<?= h($old['name'] ?? '') ?>" autocomplete="name"></label>
+      <label>Country <span class="opt">(optional)</span><input name="country" maxlength="80" value="<?= h($old['country'] ?? '') ?>" autocomplete="country-name"></label>
+    </div>
+    <?php if ($tours): ?><label>Which trip? <span class="opt">(optional)</span><select name="tour_id"><option value="">— Select a trip —</option><?php foreach ($tours as $t): ?><option value="<?= (int) $t['id'] ?>" <?= $preTour === (int) $t['id'] ? 'selected' : '' ?>><?= h($t['title']) ?></option><?php endforeach; ?></select></label><?php endif; ?>
+    <label>Title <span class="opt">(optional)</span><input name="title" maxlength="160" value="<?= h($old['title'] ?? '') ?>" placeholder="e.g. The best weekend ever"></label>
+    <label>Your review<textarea name="body" rows="5" required minlength="20" maxlength="3000" placeholder="Tell others about your trip…"><?= h($old['body'] ?? '') ?></textarea></label>
+    <button class="btn dark lg block">Submit review</button>
+  </form>
+</dialog>
 <?php site_footer();

@@ -7,7 +7,7 @@ $featured = tours_query('t.featured = 1', [], 'LIMIT 6');
 if (!$featured) $featured = tours_query('1=1', [], 'LIMIT 6');
 $dests = rows('SELECT d.*, (SELECT COUNT(*) FROM tours t WHERE t.destination_id = d.id AND t.active = 1) n FROM destinations d WHERE d.active = 1 ORDER BY d.sort, d.name LIMIT 8');
 $services = rows('SELECT * FROM services WHERE active = 1 ORDER BY sort, id LIMIT 6');
-$reviews = rows("SELECT r.*, t.title tour FROM reviews r LEFT JOIN tours t ON t.id = r.tour_id WHERE r.status = 'approved' ORDER BY r.approved_at DESC LIMIT 6");
+$reviews = rows("SELECT r.*, t.title tour FROM reviews r LEFT JOIN tours t ON t.id = r.tour_id WHERE r.status = 'approved' ORDER BY r.created_at DESC LIMIT 12");
 $avg = $reviews ? round((float) val("SELECT AVG(rating) FROM reviews WHERE status = 'approved'"), 1) : 0;
 $nrev = (int) val("SELECT COUNT(*) FROM reviews WHERE status = 'approved'");
 $gallery = rows('SELECT * FROM gallery WHERE active = 1 ORDER BY sort, id DESC LIMIT 8');
@@ -156,11 +156,11 @@ site_header('', ['image' => $slides[0]['image'] ?? null]);
 
 <section class="sec">
   <div class="wrap">
-    <div class="sec-head"><div><p class="eyebrow">Guest reviews</p><h2 class="h2"><?= $reviews ? 'What our travellers say' : 'Travelled with us?' ?></h2>
-      <?php if ($reviews): ?><p class="rating-sum"><?= stars((int) round($avg)) ?> <b><?= h(number_format($avg, 1)) ?></b> from <?= $nrev ?> review<?= $nrev === 1 ? '' : 's' ?></p><?php endif; ?></div>
-      <a class="link-more" href="<?= url('reviews.php#write') ?>">Write a review <?= sicon('arrow', 18) ?></a></div>
-    <?php if ($reviews): ?><div class="rgrid"><?php foreach ($reviews as $r) echo review_card($r); ?></div>
-    <?php else: ?><p class="muted">We'd love to hear about your trip. <a href="<?= url('reviews.php#write') ?>">Share your experience</a> and it will appear here once approved.</p><?php endif; ?>
+    <div class="sec-head"><div><p class="eyebrow">Guest reviews</p><h2 class="h2">What our <em>travellers say</em></h2></div><a class="link-more" href="<?= url('reviews.php') ?>">All reviews <?= sicon('arrow', 18) ?></a></div>
+    <div class="reviews-layout">
+      <?= review_summary() ?>
+      <?php if ($reviews): ?><?= reviews_slider($reviews) ?><?php else: ?><div class="rempty"><p>We'd love to hear about your trip — your review will appear here once our team has approved it.</p></div><?php endif; ?>
+    </div>
   </div>
 </section>
 

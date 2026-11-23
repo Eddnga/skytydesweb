@@ -107,4 +107,37 @@
       if (e.key === 'ArrowRight') show(cur + 1);
     });
   }
+  // review carousels
+  $$('[data-rslider]').forEach(function (sl) {
+    var track = $('.rtrack', sl), prev = $('.rprev', sl), next = $('.rnext', sl), timer;
+    var step = function () { var c = $('.rcard', track); return c ? c.getBoundingClientRect().width + 24 : 320; };
+    var go = function (dir) {
+      var max = track.scrollWidth - track.clientWidth - 4;
+      if (dir > 0 && track.scrollLeft >= max) track.scrollTo({ left: 0, behavior: 'smooth' });
+      else if (dir < 0 && track.scrollLeft <= 4) track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+      else track.scrollBy({ left: dir * step(), behavior: 'smooth' });
+    };
+    if (prev) prev.addEventListener('click', function () { go(-1); restart(); });
+    if (next) next.addEventListener('click', function () { go(1); restart(); });
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var restart = function () { clearInterval(timer); if (!reduce && track.scrollWidth > track.clientWidth + 10) timer = setInterval(function () { go(1); }, 6000); };
+    sl.addEventListener('mouseenter', function () { clearInterval(timer); });
+    sl.addEventListener('mouseleave', restart);
+    track.addEventListener('touchstart', function () { clearInterval(timer); }, { passive: true });
+    restart();
+  });
+  // read more on long reviews
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-more]'); if (!b) return;
+    var q = b.previousElementSibling; q.classList.toggle('clamp');
+    b.textContent = q.classList.contains('clamp') ? 'Read more' : 'Show less';
+  });
+  // write-a-review pop-up
+  var rw = document.getElementById('write');
+  if (rw && typeof rw.showModal === 'function') {
+    $$('[data-review-open]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); rw.showModal(); }); });
+    $$('[data-close]', rw).forEach(function (b) { b.addEventListener('click', function () { rw.close(); }); });
+    rw.addEventListener('click', function (e) { if (e.target === rw) rw.close(); });
+    if (rw.hasAttribute('data-autoopen')) rw.showModal();
+  }
 })();

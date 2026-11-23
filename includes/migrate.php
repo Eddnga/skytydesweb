@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -61,6 +61,18 @@ function schema_v3(): array
     ];
 }
 
+/** Version 4: where a review came from (website, Google, TripAdvisor, Facebook). */
+function add_review_source_columns(): void
+{
+    foreach (["ALTER TABLE reviews ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT 'website'", "ALTER TABLE reviews ADD COLUMN source_url VARCHAR(255) NULL"] as $sql) {
+        try {
+            db()->exec($sql);
+        } catch (Throwable $e) {
+            // column already exists
+        }
+    }
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -84,6 +96,7 @@ function maybe_migrate(): void
             seed_v2_defaults();
         }
         if ($v < 3) foreach (schema_v3() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
+        if ($v < 4) add_review_source_columns();
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

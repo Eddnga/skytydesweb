@@ -53,6 +53,7 @@ if (is_post()) {
             if ((int) val('SELECT COUNT(*) FROM users') > 0) throw new RuntimeException('This database already has users. Use an empty database.');
             seed_settings();
             if ($f('sample') === '1') seed_content();
+            add_review_source_columns();
             seed_v2_defaults();
             set_setting('db_version', (string) DB_VERSION);
             insert('users', ['name' => $name, 'email' => $email, 'password_hash' => password_hash($pass, PASSWORD_DEFAULT), 'role' => 'admin', 'active' => 1, 'created_at' => now()]);
