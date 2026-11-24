@@ -8,7 +8,10 @@ $staff = current_user() !== null; // dashboard users can preview every document
 if ($d['access'] === 'request' && !$staff) redirect('wa.php?src=document&item=' . rawurlencode($d['title']));
 $path = $d['file'] && preg_match('#^docs/[a-f0-9]{24}\.pdf$#', $d['file']) ? ROOT . '/uploads/' . $d['file'] : null;
 if (!$path || !is_file($path)) not_found();
-if (!$staff && throttle('doc:' . $d['id'] . ':' . client_ip(), 1, 600)) q('UPDATE documents SET downloads = downloads + 1 WHERE id = ?', [$d['id']]);
+if (!$staff && throttle('doc:' . $d['id'] . ':' . client_ip(), 1, 600)) {
+    q('UPDATE documents SET downloads = downloads + 1 WHERE id = ?', [$d['id']]);
+    audit('visitor_document', 'documents', (int) $d['id'], ['name' => $d['title']]);
+}
 $name = slugify($d['title']) . '.pdf';
 header('Content-Type: application/pdf');
 header('Content-Length: ' . filesize($path));

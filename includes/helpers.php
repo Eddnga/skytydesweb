@@ -5,14 +5,80 @@ function h($s): string
 {
     return htmlspecialchars((string) ($s ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+// ---------- clean URLs ----------
+// Public pages that get a clean address: /tours instead of /tours.php
+const PRETTY_PAGES = ['tours', 'destinations', 'offers', 'gallery', 'blog', 'reviews', 'about', 'contact', 'services', 'faqs', 'documents'];
+// Detail pages: tour.php?slug=x → /tours/x
+const PRETTY_DETAIL = ['tour' => 'tours', 'destination' => 'destinations', 'post' => 'blog'];
+
+function pretty_on(): bool
+{
+    return (settings()['pretty_urls'] ?? '') === '1';
+}
+/** Turns 'tour.php?slug=big-five#days' into 'tours/big-five#days' when clean URLs are on. */
+function pretty_path(string $path): string
+{
+    $path = ltrim($path, '/');
+    if (!pretty_on() || !preg_match('#^([a-z]+)\.php(.*)$#', $path, $m)) return $path;
+    [, $page, $rest] = $m;
+    if ($page === 'index') return $rest;
+    if ($page === 'section' && preg_match('#^\?type=([a-z0-9_]+)(?:&slug=([^&\#]+))?(.*)$#', $rest, $r)) {
+        $tail = $r[3];
+        if ($tail !== '' && $tail[0] === '&') $tail = '?' . substr($tail, 1);
+        return 'sections/' . $r[1] . ($r[2] !== '' ? '/' . $r[2] : '') . $tail;
+    }
+    if (isset(PRETTY_DETAIL[$page]) && preg_match('#^\?slug=([^&\#]+)(.*)$#', $rest, $r)) {
+        $tail = $r[2];
+        if ($tail !== '' && $tail[0] === '&') $tail = '?' . substr($tail, 1);
+        return PRETTY_DETAIL[$page] . '/' . $r[1] . $tail;
+    }
+    if (in_array($page, PRETTY_PAGES, true)) return $page . $rest;
+    return $path;
+}
 function url(string $path = ''): string
 {
-    return BASE_PATH . '/' . ltrim($path, '/');
+    return BASE_PATH . '/' . pretty_path($path);
 }
 function abs_url(string $path = ''): string
 {
     global $CONFIG;
-    return rtrim($CONFIG['base_url'], '/') . '/' . ltrim($path, '/');
+    return rtrim($CONFIG['base_url'], '/') . '/' . pretty_path($path);
+}
+/** Old address (/tours.php, /tour.php?slug=x) → permanent redirect to the clean one. */
+function pretty_redirect(): void
+{
+    if (!pretty_on() || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = (string) parse_url($uri, PHP_URL_PATH);
+    if (BASE_PATH && str_starts_with($path, BASE_PATH)) $path = substr($path, strlen(BASE_PATH));
+    if (!preg_match('#^/([a-z]+)\.php$#', $path, $m)) return;
+    if ($m[1] !== 'index' && $m[1] !== 'section' && !in_array($m[1], PRETTY_PAGES, true) && !isset(PRETTY_DETAIL[$m[1]])) return;
+    $q = (string) parse_url($uri, PHP_URL_QUERY);
+    $to = pretty_path($m[1] . '.php' . ($q !== '' ? '?' . $q : ''));
+    if (str_ends_with($to, '.php') || str_contains($to, '.php?')) return; // nothing to tidy (e.g. tour.php without slug)
+    header('Location: ' . BASE_PATH . '/' . $to, true, 301);
+    exit;
+}
+/**
+ * Checks that the server understands the clean-URL rules (it asks itself for /tours).
+ * Turns clean URLs on when it works, off when it doesn't.
+ */
+function check_pretty_urls(): bool
+{
+    global $CONFIG;
+    $ok = false;
+    $base = rtrim($CONFIG['base_url'] ?? '', '/');
+    if ($base !== '' && function_exists('curl_init')) {
+        $ch = curl_init($base . '/tours');
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_FOLLOWLOCATION => false, CURLOPT_USERAGENT => 'SkyTydes-selfcheck']);
+        $body = (string) curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $ok = $code === 200 && str_contains($body, 'class="nav"');
+    }
+    set_setting('pretty_urls', $ok ? '1' : '0');
+    set_setting('pretty_checked_at', now());
+    return $ok;
 }
 function asset(string $path): string
 {
@@ -56,6 +122,7 @@ function csrf_check(): void
 {
     $t = $_POST['_csrf'] ?? '';
     if (!is_string($t) || !hash_equals(csrf_token(), $t)) {
+        audit('csrf_blocked', 'form', null, ['page' => strtok($_SERVER['REQUEST_URI'] ?? '', '?')]);
         http_response_code(419);
         exit('Your session expired. Please go back, refresh the page and try again.');
     }
@@ -158,12 +225,39 @@ function input(string $k, string $default = ''): string
     $v = $_POST[$k] ?? $_GET[$k] ?? $default;
     return is_string($v) ? trim($v) : $default;
 }
-function audit(string $action, string $entity = '', ?int $id = null): void
+/**
+ * Records something in the activity log. $details is a small array of facts
+ * (the item's name, which fields changed, the email tried…) kept as JSON.
+ */
+function audit(string $action, string $entity = '', ?int $id = null, ?array $details = null): void
 {
     try {
-        insert('audit_log', ['user_id' => $_SESSION['uid'] ?? null, 'action' => $action, 'entity' => $entity, 'entity_id' => $id, 'ip' => client_ip(), 'created_at' => now()]);
+        $row = ['user_id' => $_SESSION['uid'] ?? null, 'action' => mb_substr($action, 0, 60), 'entity' => mb_substr($entity, 0, 60), 'entity_id' => $id, 'ip' => client_ip(), 'created_at' => now()];
+        if ($details) $row['details'] = mb_substr(json_encode($details, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 0, 4000);
+        insert('audit_log', $row);
     } catch (Throwable $e) {
+        // before v5 the details column doesn't exist yet
+        if ($details) {
+            try {
+                insert('audit_log', ['user_id' => $_SESSION['uid'] ?? null, 'action' => $action, 'entity' => $entity, 'entity_id' => $id, 'ip' => client_ip(), 'created_at' => now()]);
+            } catch (Throwable $e) {
+            }
+        }
     }
+}
+/** "Chrome on Android", "Safari on iPhone"… */
+function ua_summary(?string $ua = null): string
+{
+    $ua = $ua ?? ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $b = 'Browser';
+    foreach (['Edg/' => 'Edge', 'OPR/' => 'Opera', 'SamsungBrowser' => 'Samsung Internet', 'Brave' => 'Brave', 'Firefox/' => 'Firefox', 'Chrome/' => 'Chrome', 'Safari/' => 'Safari'] as $k => $n) {
+        if (stripos($ua, $k) !== false) { $b = $n; break; }
+    }
+    $os = 'unknown device';
+    foreach (['iPhone' => 'iPhone', 'iPad' => 'iPad', 'Android' => 'Android', 'Windows' => 'Windows', 'Mac OS X' => 'Mac', 'Linux' => 'Linux'] as $k => $n) {
+        if (stripos($ua, $k) !== false) { $os = $n; break; }
+    }
+    return "$b on $os";
 }
 
 /**

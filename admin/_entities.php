@@ -169,5 +169,8 @@ function entities(): array
                 ['active', 'bool', 'Show on website', ['default' => 1]],
             ],
         ],
-    ];
+    ] + array_combine(
+        array_map(fn($k) => 'sec_' . $k, array_keys(custom_types())),
+        array_map('section_entity', array_values(custom_types()))
+    );
 }

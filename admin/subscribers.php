@@ -6,13 +6,15 @@ $user = require_login();
 if (is_post()) {
     csrf_check();
     if (input('do') === 'delete' && ($id = (int) input('id'))) {
+        $em = val('SELECT email FROM subscribers WHERE id = ?', [$id]);
         q('DELETE FROM subscribers WHERE id = ?', [$id]);
-        audit('delete', 'subscribers', $id);
+        audit('delete', 'subscribers', $id, ['name' => (string) $em, 'type' => 'subscriber']);
         flash('ok', 'Subscriber removed.');
     }
     redirect('admin/subscribers.php');
 }
 if (input('export') === 'csv') {
+    audit('export', 'subscribers', null, ['what' => 'subscriber list (CSV)', 'rows' => (int) val('SELECT COUNT(*) FROM subscribers')]);
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="skytydes-subscribers-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');

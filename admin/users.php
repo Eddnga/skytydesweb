@@ -3,6 +3,10 @@ declare(strict_types=1);
 require __DIR__ . '/_init.php';
 $me = require_role('admin');
 
+$super = is_super($me);
+$allowedRoles = $super ? ['editor', 'admin', 'superadmin'] : ['editor', 'admin'];
+$pickRole = fn() => in_array(input('role'), $allowedRoles, true) ? input('role') : 'editor';
+
 if (is_post()) {
     csrf_check();
     $do = input('do');
@@ -10,28 +14,46 @@ if (is_post()) {
     if ($do === 'create') {
         $email = strtolower(input('email'));
         $pass = (string) ($_POST['password'] ?? '');
-        $role = input('role') === 'admin' ? 'admin' : 'editor';
+        $role = $pickRole();
         if (input('name') === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) flash('error', 'Enter a name and a valid email.');
         elseif ($p = password_problems($pass)) flash('error', 'Password: ' . $p);
         elseif (val('SELECT COUNT(*) FROM users WHERE email = ?', [$email])) flash('error', 'A user with that email already exists.');
         else {
             $nid = insert('users', ['name' => mb_substr(input('name'), 0, 120), 'email' => $email, 'password_hash' => password_hash($pass, PASSWORD_DEFAULT), 'role' => $role, 'active' => 1, 'created_at' => now()]);
-            audit('create', 'users', $nid);
+            audit('create', 'users', $nid, ['name' => input('name'), 'email' => $email, 'role' => role_label($role)]);
             flash('ok', 'User added. Share the password with them privately and ask them to change it.');
         }
     } elseif ($id && $id !== (int) $me['id']) {
-        if ($do === 'toggle') q('UPDATE users SET active = 1 - active WHERE id = ?', [$id]);
-        if ($do === 'role') q('UPDATE users SET role = ? WHERE id = ?', [input('role') === 'admin' ? 'admin' : 'editor', $id]);
+        $target = row('SELECT id, name, email, role, active FROM users WHERE id = ?', [$id]);
+        if (!$target) redirect('admin/users.php');
+        // only the super admin can change a super admin's account
+        if ($target['role'] === 'superadmin' && !$super) {
+            audit('access_denied', 'users', $id, ['name' => $target['name'], 'tried' => $do]);
+            flash('error', 'Only the super admin can change that account.');
+            redirect('admin/users.php');
+        }
+        $info = ['name' => $target['name'], 'email' => $target['email']];
+        if ($do === 'toggle') {
+            q('UPDATE users SET active = 1 - active WHERE id = ?', [$id]);
+            $info['now'] = $target['active'] ? 'disabled' : 'enabled';
+        }
+        if ($do === 'role') {
+            $role = $pickRole();
+            q('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
+            $info['from'] = role_label($target['role']);
+            $info['to'] = role_label($role);
+        }
         if ($do === 'reset') {
             $pass = (string) ($_POST['password'] ?? '');
-            if ($p = password_problems($pass)) flash('error', 'Password: ' . $p);
-            else {
-                q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($pass, PASSWORD_DEFAULT), $id]);
-                flash('ok', 'Password reset.');
+            if ($p = password_problems($pass)) {
+                flash('error', 'Password: ' . $p);
+                redirect('admin/users.php');
             }
+            q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($pass, PASSWORD_DEFAULT), $id]);
+            flash('ok', 'Password reset.');
         }
         if ($do === 'delete') q('DELETE FROM users WHERE id = ?', [$id]);
-        audit('user_' . $do, 'users', $id);
+        audit('user_' . $do, 'users', $id, $info);
     }
     redirect('admin/users.php');
 }
@@ -39,7 +61,7 @@ $list = rows('SELECT * FROM users ORDER BY name');
 admin_header('Users', 'users');
 ?>
 <div class="toolbar"><span></span><button type="button" class="btn" data-modal-open="addModal"><?= icon('plus', 18) ?> Add user</button></div>
-<p class="muted"><strong>Admins</strong> can do everything. <strong>Editors</strong> can manage content, reviews and leads, but not users or the activity log.</p>
+<p class="muted"><strong>Super admin</strong> sees everything, including visitor insights, site health and database tools. <strong>Admins</strong> manage content, users and the activity log. <strong>Editors</strong> manage content, reviews and leads only.</p>
 <div class="card table-wrap">
 <table class="table">
   <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last login</th><th>Status</th><th class="right">Actions</th></tr></thead>
@@ -48,12 +70,12 @@ admin_header('Users', 'users');
     <tr>
       <td data-l="Name"><strong><?= h($u['name']) ?></strong><?= $self ? ' <span class="pill">You</span>' : '' ?></td>
       <td data-l="Email"><?= h($u['email']) ?></td>
-      <td data-l="Role"><?php if ($self): ?><?= h(ucfirst($u['role'])) ?><?php else: ?>
-        <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="do" value="role"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><select name="role" class="sel-sm" data-autosubmit><option value="editor" <?= $u['role'] === 'editor' ? 'selected' : '' ?>>Editor</option><option value="admin" <?= $u['role'] === 'admin' ? 'selected' : '' ?>>Admin</option></select></form>
+      <td data-l="Role"><?php if ($self || ($u['role'] === 'superadmin' && !$super)): ?><?= h(role_label($u['role'])) ?><?php else: ?>
+        <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="do" value="role"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><select name="role" class="sel-sm" data-autosubmit><?php foreach ($allowedRoles as $r): ?><option value="<?= h($r) ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= h(role_label($r)) ?></option><?php endforeach; ?></select></form>
       <?php endif; ?></td>
       <td data-l="Last login" class="muted small"><?= h($u['last_login_at'] ? fdate($u['last_login_at'], 'j M Y, H:i') : 'Never') ?></td>
       <td data-l="Status"><?= $u['active'] ? '<span class="pill ok">Active</span>' : '<span class="pill">Disabled</span>' ?></td>
-      <td class="right nowrap"><?php if (!$self): ?>
+      <td class="right nowrap"><?php if (!$self && ($super || $u['role'] !== 'superadmin')): ?>
         <details class="inline-details"><summary class="btn ghost sm">Reset password</summary>
           <form method="post" class="form mini"><?= csrf_field() ?><input type="hidden" name="do" value="reset"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><input type="password" name="password" placeholder="New password" minlength="10" required><button class="btn sm">Set</button></form></details>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="do" value="toggle"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><button class="btn ghost sm"><?= $u['active'] ? 'Disable' : 'Enable' ?></button></form>
@@ -74,7 +96,7 @@ admin_header('Users', 'users');
       <label>Name<input name="name" required maxlength="120"></label>
       <label>Email<input type="email" name="email" required></label>
       <label>Temporary password<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
-      <label>Role<select name="role"><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+      <label>Role<select name="role"><?php foreach ($allowedRoles as $r): ?><option value="<?= h($r) ?>"><?= h(role_label($r)) ?></option><?php endforeach; ?></select></label>
     </div>
     <div class="actions"><button class="btn"><?= icon('plus', 18) ?> Add user</button><button type="button" class="btn ghost" data-modal-close>Cancel</button></div>
   </form>

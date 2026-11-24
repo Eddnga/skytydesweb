@@ -60,6 +60,7 @@ $groups = [
 
 if (is_post()) {
     csrf_check();
+    $changed = [];
     foreach ($groups as $fields) foreach ($fields as $f) {
         if ($f[1] === 'image') {
             if (!empty($_FILES[$f[0]]) && $_FILES[$f[0]]['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -67,6 +68,7 @@ if (is_post()) {
                     $new = store_image($_FILES[$f[0]]);
                     delete_image(setting($f[0]) ?: null);
                     set_setting($f[0], $new);
+                    $changed[] = $f[2];
                 } catch (RuntimeException $e) {
                     flash('error', $f[2] . ': ' . $e->getMessage());
                     redirect('admin/settings.php');
@@ -74,6 +76,7 @@ if (is_post()) {
             } elseif (isset($_POST[$f[0] . '_remove'])) {
                 delete_image(setting($f[0]) ?: null);
                 set_setting($f[0], '');
+                $changed[] = $f[2] . ' (removed)';
             }
             continue;
         }
@@ -88,9 +91,11 @@ if (is_post()) {
             flash('error', 'Enter a valid email address.');
             redirect('admin/settings.php');
         }
-        set_setting($f[0], mb_substr($v, 0, 20000));
+        $v = mb_substr($v, 0, 20000);
+        if ($v !== setting($f[0])) $changed[] = $f[2];
+        set_setting($f[0], $v);
     }
-    audit('update', 'settings');
+    audit('update', 'settings', null, ['changed' => $changed ?: ['nothing (saved again)']]);
     flash('ok', 'Settings saved.');
     redirect('admin/settings.php');
 }

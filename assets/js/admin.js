@@ -128,3 +128,43 @@
     if (m && !document.querySelector('.note-editor.fullscreen')) closeModal(m);
   });
 })();
+
+// close the mobile sidebar with Escape or after picking a page
+(function () {
+  var t = document.getElementById('navtoggle');
+  if (!t) return;
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') t.checked = false; });
+  document.querySelectorAll('.side nav a').forEach(function (a) { a.addEventListener('click', function () { t.checked = false; }); });
+})();
+
+// content-section field builder
+(function () {
+  var tpl = document.getElementById('frowTpl');
+  if (!tpl) return;
+  var sync = function (row) {
+    var t = row.querySelector('[data-ftype]'), o = row.querySelector('.fopts');
+    if (t && o) o.hidden = t.value !== 'select';
+  };
+  document.querySelectorAll('.frow').forEach(sync);
+  document.addEventListener('change', function (e) { if (e.target.matches('[data-ftype]')) sync(e.target.closest('.frow')); });
+  document.addEventListener('click', function (e) {
+    var add = e.target.closest('[data-frow-add]');
+    if (add) {
+      var box = add.closest('form').querySelector('[data-frows][data-new]');
+      var row = tpl.content.firstElementChild.cloneNode(true);
+      box.appendChild(row); sync(row);
+      var first = row.querySelector('input'); if (first) first.focus();
+    }
+    var rm = e.target.closest('[data-frow-remove]');
+    if (rm) rm.closest('.frow').remove();
+  });
+  document.querySelectorAll('[data-fields-form]').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      f.querySelectorAll('[data-frows]').forEach(function (box) {
+        box.querySelectorAll('.frow').forEach(function (row, i) {
+          row.querySelectorAll('[name]').forEach(function (el) { el.name = el.name.replace(/\[(__i__|\d*)\]$/, '[' + i + ']'); });
+        });
+      });
+    });
+  });
+})();

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -73,6 +73,68 @@ function add_review_source_columns(): void
     }
 }
 
+/** Version 5: super admin, visitor insights, fuller audit trail, custom sections. */
+function schema_v5(): array
+{
+    return [
+        "CREATE TABLE IF NOT EXISTS page_views (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            path VARCHAR(255) NOT NULL,
+            title VARCHAR(160) NULL,
+            ip VARCHAR(45) NULL,
+            visitor CHAR(16) NULL,
+            referrer VARCHAR(120) NULL,
+            device VARCHAR(12) NULL,
+            browser VARCHAR(20) NULL,
+            ms INT UNSIGNED NULL,
+            created_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+        "CREATE INDEX idx_views_time ON page_views (created_at)",
+        "CREATE TABLE IF NOT EXISTS ip_geo (
+            ip VARCHAR(45) NOT NULL PRIMARY KEY,
+            country VARCHAR(80) NULL,
+            country_code CHAR(2) NULL,
+            region VARCHAR(80) NULL,
+            city VARCHAR(80) NULL,
+            org VARCHAR(120) NULL,
+            looked_up_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+        "CREATE TABLE IF NOT EXISTS custom_types (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            slug VARCHAR(40) NOT NULL UNIQUE,
+            label VARCHAR(80) NOT NULL,
+            one_label VARCHAR(80) NOT NULL,
+            intro TEXT NULL,
+            fields MEDIUMTEXT NOT NULL,
+            in_menu TINYINT(1) NOT NULL DEFAULT 0,
+            public TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    ];
+}
+function upgrade_v5(): void
+{
+    global $CONFIG;
+    $sqlite = ($CONFIG['db']['driver'] ?? 'mysql') === 'sqlite';
+    foreach (schema_v5() as $sql) {
+        try {
+            db()->exec($sqlite ? to_sqlite($sql) : $sql);
+        } catch (Throwable $e) {
+            // index already exists
+        }
+    }
+    try {
+        db()->exec('ALTER TABLE audit_log ADD COLUMN details TEXT NULL');
+    } catch (Throwable $e) {
+        // column already exists
+    }
+    // the first administrator becomes the super admin
+    if (!(int) val("SELECT COUNT(*) FROM users WHERE role = 'superadmin'")) {
+        $first = val("SELECT id FROM users WHERE role = 'admin' AND active = 1 ORDER BY id LIMIT 1");
+        if ($first) q("UPDATE users SET role = 'superadmin' WHERE id = ?", [(int) $first]);
+    }
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -97,6 +159,7 @@ function maybe_migrate(): void
         }
         if ($v < 3) foreach (schema_v3() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
         if ($v < 4) add_review_source_columns();
+        if ($v < 5) upgrade_v5();
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

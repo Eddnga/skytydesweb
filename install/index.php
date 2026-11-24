@@ -54,9 +54,10 @@ if (is_post()) {
             seed_settings();
             if ($f('sample') === '1') seed_content();
             add_review_source_columns();
+            upgrade_v5();
             seed_v2_defaults();
             set_setting('db_version', (string) DB_VERSION);
-            insert('users', ['name' => $name, 'email' => $email, 'password_hash' => password_hash($pass, PASSWORD_DEFAULT), 'role' => 'admin', 'active' => 1, 'created_at' => now()]);
+            insert('users', ['name' => $name, 'email' => $email, 'password_hash' => password_hash($pass, PASSWORD_DEFAULT), 'role' => 'superadmin', 'active' => 1, 'created_at' => now()]);
 
             $php = "<?php\n// Written by the SkyTydes installer on " . date('Y-m-d H:i') . ". Keep this file private.\nreturn " . var_export($cfg, true) . ";\n";
             $php = str_replace("'" . STORAGE . "/dev.sqlite'", "__DIR__ . '/storage/dev.sqlite'", $php);

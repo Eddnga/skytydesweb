@@ -32,7 +32,7 @@ if (is_post()) {
             }
             if (!empty($E['itinerary'])) q('DELETE FROM itinerary_days WHERE tour_id = ?', [$id]);
             q("DELETE FROM $T WHERE id = ?", [$id]);
-            audit('delete', $T, $id);
+            audit('delete', $T, $id, ['name' => (string) ($rec[$E['title']] ?? ''), 'type' => $E['one']]);
             flash('ok', ucfirst($E['one']) . ' deleted.');
         }
         redirect($self);
@@ -41,7 +41,8 @@ if (is_post()) {
     if ($action === 'toggle' && $id) {
         $col = in_array('published', array_column($E['fields'], 0), true) ? 'published' : 'active';
         q("UPDATE $T SET $col = 1 - $col WHERE id = ?", [$id]);
-        audit('toggle', $T, $id);
+        $tr = row("SELECT * FROM $T WHERE id = ?", [$id]);
+        audit('toggle', $T, $id, ['name' => (string) ($tr[$E['title']] ?? ''), 'type' => $E['one'], 'now' => !empty($tr[$col]) ? 'shown on website' : 'hidden']);
         redirect($self);
     }
 
@@ -61,7 +62,7 @@ if (is_post()) {
                 }
             }
         }
-        audit('bulk_upload', $T);
+        audit('bulk_upload', $T, null, ['added' => $n, 'failed' => count($errs), 'category' => input('category')]);
         if ($n) flash('ok', "$n photo(s) added to the gallery.");
         if ($errs) flash('error', implode(' ', $errs));
         redirect($self);
@@ -148,11 +149,17 @@ if (is_post()) {
         }
         if (!empty($E['timestamps_created']) && !$id) $data['created_at'] = now();
         if ($id) {
+            $labels = array_column($E['fields'], 2, 0) + ['slug' => 'Web address'];
+            $changed = [];
+            foreach ($data as $k => $v) {
+                if (in_array($k, ['updated_at', 'created_at', 'file_size'], true)) continue;
+                if ((string) ($rec[$k] ?? '') !== (string) ($v ?? '')) $changed[] = $labels[$k] ?? $k;
+            }
             update($T, $id, $data);
-            audit('update', $T, $id);
+            audit('update', $T, $id, ['name' => (string) ($data[$E['title']] ?? ''), 'type' => $E['one'], 'changed' => $changed ?: ['nothing (saved again)']]);
         } else {
             $id = insert($T, $data);
-            audit('create', $T, $id);
+            audit('create', $T, $id, ['name' => (string) ($data[$E['title']] ?? ''), 'type' => $E['one']]);
         }
         if (!empty($E['itinerary'])) {
             q('DELETE FROM itinerary_days WHERE tour_id = ?', [$id]);

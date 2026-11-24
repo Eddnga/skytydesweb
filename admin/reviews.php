@@ -22,12 +22,12 @@ if (is_post()) {
             $nid = insert('reviews', ['name' => $name, 'country' => mb_substr(input('country'), 0, 80) ?: null, 'rating' => max(1, min(5, (int) input('rating'))),
                 'title' => mb_substr(input('title'), 0, 160) ?: null, 'body' => $body, 'tour_id' => ((int) input('tour_id')) ?: null,
                 'status' => 'approved', 'source' => $src, 'source_url' => $url ?: null, 'created_at' => $date, 'approved_at' => now()]);
-            audit('review_add', 'reviews', $nid);
+            audit('review_add', 'reviews', $nid, ['name' => $name, 'source' => $src]);
             flash('ok', 'Review added and published.');
         }
         redirect('admin/reviews.php?status=approved');
     }
-    if ($id && row('SELECT id FROM reviews WHERE id = ?', [$id])) {
+    if ($id && ($rv = row('SELECT id, name, rating FROM reviews WHERE id = ?', [$id]))) {
         if ($do === 'approve') {
             q("UPDATE reviews SET status = 'approved', approved_at = ? WHERE id = ?", [now(), $id]);
             flash('ok', 'Review approved — it is now on the website.');
@@ -49,7 +49,7 @@ if (is_post()) {
                 mb_substr(input('title'), 0, 160) ?: null, mb_substr(input('body'), 0, 4000), ((int) input('tour_id')) ?: null, $src, $url, $id]);
             flash('ok', 'Review updated.');
         }
-        audit('review_' . $do, 'reviews', $id);
+        audit('review_' . $do, 'reviews', $id, ['name' => $rv['name'], 'rating' => (int) $rv['rating'] . '★']);
     }
     $back = input('back', 'admin/reviews.php');
     redirect(str_starts_with($back, 'admin/') ? $back : 'admin/reviews.php');

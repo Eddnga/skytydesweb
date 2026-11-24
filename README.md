@@ -73,3 +73,26 @@ Deploys never overwrite `config.php`, `storage/` or images uploaded in the dashb
 **Brand fonts:** put `Allenoire.woff2` and the `Lufga-*.woff2` files in `assets/fonts/` and uncomment the `@font-face` block at the top of `assets/css/site.css`.
 
 **Forgot password:** another Admin can reset it under Users — keep at least two admin accounts.
+
+## Clean web addresses & OpenLiteSpeed (Chajio)
+
+Chajio runs **OpenLiteSpeed**, which only reads the *rewrite* rules in `.htaccess` (it ignores
+`<FilesMatch>`, `Require`, `RedirectMatch`, `Header`…). Every protection that matters — blocking
+`includes/`, `storage/`, dotfiles, `uploads/docs/`, scripts inside `uploads/` — is therefore repeated
+as a `RewriteRule … [F]`. **After uploading a changed `.htaccess`, press "Restart container" in MyPanel**
+so the server reloads it.
+
+Clean addresses (`/tours`, `/tours/<slug>`, `/destinations/<slug>`, `/blog/<slug>`, `/sections/<type>/<slug>`)
+switch on automatically the first time an admin opens the dashboard, after the site confirms the server
+understands them. Old `.php` links redirect permanently (301). Super admin → Site health has a
+"Test clean addresses" button and an off switch.
+
+Local development: `PHP_CLI_SERVER_WORKERS=4 php -S localhost:8000 router.php` (the router copies the
+`.htaccess` rules; it refuses to run on a real web server).
+
+## Roles
+
+* **Super admin** (the account created by the installer) — everything, plus Visitor insights,
+  Site health, Database (backup / updates / clean-up) and Content sections (create new content types).
+* **Admin** — content, users and the activity log.
+* **Editor** — content, reviews and leads.

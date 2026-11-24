@@ -6,4 +6,4 @@ if (is_post()) {
     audit('logout');
     logout();
 }
-redirect('admin/login.php');
+redirect(''); // back to the website home

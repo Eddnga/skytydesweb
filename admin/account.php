@@ -22,7 +22,7 @@ if (is_post()) {
 admin_header('My account', 'account');
 ?>
 <section class="card edit narrow">
-  <p><strong><?= h($me['name']) ?></strong><br><span class="muted"><?= h($me['email']) ?> · <?= h(ucfirst($me['role'])) ?></span></p>
+  <p><strong><?= h($me['name']) ?></strong><br><span class="muted"><?= h($me['email']) ?> · <?= h(role_label($me['role'])) ?></span></p>
   <form method="post" class="form">
     <?= csrf_field() ?>
     <label>Display name<input name="name" value="<?= h($me['name']) ?>" maxlength="120"></label>

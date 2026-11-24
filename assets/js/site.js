@@ -9,12 +9,39 @@
   window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
   // mobile menu
-  var burger = $('.burger');
-  if (burger) burger.addEventListener('click', function () {
-    var open = document.body.classList.toggle('menu-open');
-    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  var burger = $('.burger'), drawer = $('#drawer');
+  var setMenu = function (open) {
+    document.body.classList.toggle('menu-open', open);
+    if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (drawer) drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    if (open && drawer) { var x = $('.drawer-x', drawer); if (x) x.focus(); }
+  };
+  if (burger) burger.addEventListener('click', function () { setMenu(!document.body.classList.contains('menu-open')); });
+  $$('[data-close-menu]').forEach(function (el) { el.addEventListener('click', function () { setMenu(false); }); });
+  $$('#drawer a, #menu a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 900) setMenu(false); });
+
+  // gallery strip: endless auto-scroll
+  $$('.strip').forEach(function (strip) {
+    var items = $$('a', strip);
+    if (items.length < 3) return;
+    var track = document.createElement('div');
+    track.className = 'strip-track';
+    items.forEach(function (a) { track.appendChild(a); });
+    items.forEach(function (a) {
+      var c = a.cloneNode(true);
+      c.setAttribute('aria-hidden', 'true'); c.tabIndex = -1;
+      var img = c.querySelector('img'); if (img) { img.alt = ''; img.loading = 'eager'; }
+      track.appendChild(c);
+    });
+    $$('img', track).forEach(function (img) { img.loading = 'eager'; });
+    strip.appendChild(track);
+    strip.classList.add('auto');
+    track.style.setProperty('--dur', (items.length * 6) + 's');
+    strip.addEventListener('touchstart', function () { strip.classList.add('paused'); }, { passive: true });
+    strip.addEventListener('touchend', function () { setTimeout(function () { strip.classList.remove('paused'); }, 1500); }, { passive: true });
   });
-  $$('#menu a').forEach(function (a) { a.addEventListener('click', function () { document.body.classList.remove('menu-open'); }); });
 
   // hero slider
   var hero = $('[data-slider]');

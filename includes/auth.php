@@ -12,11 +12,13 @@ function current_user(): ?array
     $u = null;
     if (!empty($_SESSION['uid'])) {
         if (time() - ($_SESSION['last_seen'] ?? 0) > SESSION_IDLE_MINUTES * 60) {
+            audit('session_expired', 'user', (int) $_SESSION['uid'], ['after_minutes' => SESSION_IDLE_MINUTES]);
             logout();
             return null;
         }
         // bind the session to the browser that created it
         if (($_SESSION['ua'] ?? '') !== hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
+            audit('session_blocked', 'user', (int) $_SESSION['uid'], ['reason' => 'session used from a different browser']);
             logout();
             return null;
         }
@@ -37,12 +39,32 @@ function require_login(): array
     return $u;
 }
 
+/** Roles, highest first: superadmin (owner, sees everything) → admin → editor. */
+function role_rank(?string $role): int
+{
+    return ['superadmin' => 3, 'admin' => 2, 'editor' => 1][$role ?? ''] ?? 0;
+}
+function is_admin(?array $u = null): bool
+{
+    $u = $u ?? current_user();
+    return $u && role_rank($u['role']) >= 2;
+}
+function is_super(?array $u = null): bool
+{
+    $u = $u ?? current_user();
+    return $u && $u['role'] === 'superadmin';
+}
+function role_label(string $role): string
+{
+    return ['superadmin' => 'Super admin', 'admin' => 'Admin', 'editor' => 'Editor'][$role] ?? ucfirst($role);
+}
 function require_role(string $role): array
 {
     $u = require_login();
-    if ($role === 'admin' && $u['role'] !== 'admin') {
+    if (role_rank($u['role']) < role_rank($role)) {
+        audit('access_denied', 'page', null, ['page' => strtok($_SERVER['REQUEST_URI'] ?? '', '?'), 'needs' => role_label($role)]);
         http_response_code(403);
-        exit('Only administrators can open this page.');
+        exit($role === 'superadmin' ? 'Only the super admin can open this page.' : 'Only administrators can open this page.');
     }
     return $u;
 }
@@ -64,7 +86,11 @@ function attempt_login(string $email, string $password): bool|string
     $hash = $u['password_hash'] ?? '$2y$10$GiRYQ1f9YfYiB2ODaIrebOhHohaPUMzhnJkO6x2.Bbz44XIeIUqfC';
     $ok = password_verify($password, $hash) && $u;
     insert('login_attempts', ['email' => $email, 'ip' => client_ip(), 'success' => $ok ? 1 : 0, 'attempted_at' => now()]);
-    if (!$ok) return false;
+    if (!$ok) {
+        audit('login_failed', 'user', $u ? (int) $u['id'] : null, ['email' => $email, 'reason' => $u ? 'wrong password' : 'unknown email']);
+        if (login_locked($email)) audit('login_locked', 'user', $u ? (int) $u['id'] : null, ['email' => $email, 'minutes' => LOGIN_LOCK_MINUTES]);
+        return false;
+    }
 
     if (password_needs_rehash($u['password_hash'], PASSWORD_DEFAULT)) {
         q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $u['id']]);
@@ -75,7 +101,7 @@ function attempt_login(string $email, string $password): bool|string
     $_SESSION['ua'] = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
     unset($_SESSION['csrf']);
     q('UPDATE users SET last_login_at = ? WHERE id = ?', [now(), $u['id']]);
-    audit('login', 'user', (int) $u['id']);
+    audit('login', 'user', (int) $u['id'], ['browser' => ua_summary()]);
     return true;
 }
 

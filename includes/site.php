@@ -14,6 +14,9 @@ function sicon(string $n, int $s = 22): string
         'x' => '<path d="M6 6l12 12M18 6L6 18"/>',
         'phone' => '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
         'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+        'home' => '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+        'map' => '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
+        'grid' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
         'compass' => '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z"/>',
         'bed' => '<path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/>',
         'car' => '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="16" r="1.5"/><circle cx="16.5" cy="16" r="1.5"/>',
@@ -54,12 +57,14 @@ function wa_btn(string $label, string $source, ?string $item = '', string $class
 
 function site_header(string $title, array $o = []): void
 {
+    pretty_redirect();
     $active = $o['active'] ?? '';
     $desc = $o['desc'] ?? setting('meta_description');
     $img = $o['image'] ?? null;
     $solid = !empty($o['solid']);
+    $GLOBALS['__page_title'] = $title === '' ? 'Home' : $title;
     $full = $title === '' ? setting('site_name', 'SkyTydes Safaris') . ' · ' . setting('tagline') : $title . ' · ' . setting('site_name', 'SkyTydes Safaris');
-    $nav = [['tours.php', 'Tours', 'tours', 'tours'], ['destinations.php', 'Destinations', 'destinations', 'dest'], ['offers.php', 'Offers', 'offers', ''], ['gallery.php', 'Gallery', 'gallery', ''], ['blog.php', 'Journal', 'blog', ''], ['reviews.php', 'Reviews', 'reviews', ''], ['about.php', 'About', 'about', 'about'], ['contact.php', 'Contact', 'contact', '']];
+    $nav = [['', 'Home', 'home', ''], ['tours.php', 'Tours', 'tours', 'tours'], ['destinations.php', 'Destinations', 'destinations', 'dest'], ['offers.php', 'Offers', 'offers', ''], ['gallery.php', 'Gallery', 'gallery', ''], ['blog.php', 'Journal', 'blog', ''], ['reviews.php', 'Reviews', 'reviews', ''], ['about.php', 'About', 'about', 'about'], ['contact.php', 'Contact', 'contact', '']];
     $megaTours = rows('SELECT t.title, t.slug, t.duration_days, t.price_from, t.currency, d.name dest FROM tours t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.active = 1 ORDER BY t.featured DESC, t.sort, t.id DESC LIMIT 6');
     $megaDest = rows('SELECT name, slug, tagline, image FROM destinations WHERE active = 1 ORDER BY sort, name LIMIT 6');
     $hasOffers = (bool) count(active_offers(1));
@@ -119,6 +124,7 @@ function site_header(string $title, array $o = []): void
                   <a href="<?= url('about.php') ?>"><b>Our story</b><small>Who we are and how we plan</small></a>
                   <a href="<?= url('about.php#hosts') ?>"><b>Your hosts</b><small>Meet the people behind SkyTydes</small></a>
                   <a href="<?= url('services.php') ?>"><b>Services</b><small>Everything we can arrange for you</small></a>
+                  <?php foreach (menu_sections() as $ms): ?><a href="<?= url('section.php?type=' . $ms['slug']) ?>"><b><?= h($ms['label']) ?></b><small><?= h(excerpt((string) ($ms['intro'] ?: 'Explore ' . mb_strtolower($ms['label'])), 48)) ?></small></a><?php endforeach; ?>
                   <a href="<?= url('documents.php') ?>"><b>Brochures &amp; rates</b><small>Company profile and downloads</small></a>
                   <a href="<?= url('faqs.php') ?>"><b>FAQs</b><small>Good to know before you travel</small></a>
                 </div>
@@ -130,9 +136,24 @@ function site_header(string $title, array $o = []): void
       <?= wa_btn('Plan my safari', 'general', 'General enquiry', 'btn wa sm menu-cta') ?>
     </nav>
     <?= wa_btn('Plan my safari', 'general', 'General enquiry', 'btn gold sm nav-cta') ?>
-    <button class="burger" aria-controls="menu" aria-expanded="false" aria-label="Open menu"><?= sicon('menu', 26) ?></button>
+    <button class="burger" aria-controls="drawer" aria-expanded="false" aria-label="Open menu"><?= sicon('menu', 26) ?></button>
   </div>
 </header>
+<div class="drawer-shade" data-close-menu></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="drawer-head">
+    <a href="<?= url('') ?>"><img src="<?= asset('img/logo-white.svg') ?>" alt="SkyTydes Safaris" width="120" height="62"></a>
+    <button class="drawer-x" data-close-menu aria-label="Close menu"><?= sicon('x', 22) ?></button>
+  </div>
+  <nav class="drawer-nav">
+    <?php $dl = [['', 'Home', 'home', 'home'], ['tours.php', 'Tours', 'tours', 'map'], ['destinations.php', 'Destinations', 'destinations', 'compass'], ['offers.php', 'Special offers', 'offers', 'tag'], ['gallery.php', 'Gallery', 'gallery', 'camera'], ['blog.php', 'Journal', 'blog', 'file'], ['reviews.php', 'Reviews', 'reviews', 'star'], ['about.php', 'About us', 'about', 'users'], ['services.php', 'Services', 'services', 'sun'], ['documents.php', 'Brochures &amp; rates', 'documents', 'download'], ['faqs.php', 'FAQs', 'faqs', 'check'], ['contact.php', 'Contact', 'contact', 'phone']];
+    foreach (menu_sections() as $ms) array_splice($dl, -3, 0, [['section.php?type=' . $ms['slug'], h($ms['label']), 'sec_' . $ms['slug'], 'grid']]);
+    foreach ($dl as $d): ?>
+      <a href="<?= url($d[0]) ?>" class="<?= $active === $d[2] ? 'on' : '' ?>"><?= sicon($d[3], 18) ?><span><?= $d[1] ?></span><?php if ($d[2] === 'offers' && $hasOffers): ?><i class="dot" aria-label="new offers"></i><?php endif; ?></a>
+    <?php endforeach; ?>
+  </nav>
+  <div class="drawer-foot"><?= wa_btn('Plan my safari', 'general', 'General enquiry', 'btn wa') ?></div>
+</aside>
 <main id="main">
 <?php
 }
@@ -232,6 +253,7 @@ function site_footer(): void
 <script src="<?= asset('js/site.js') ?>" defer></script>
 </body></html>
 <?php
+    track_view($GLOBALS['__page_title'] ?? '');
 }
 
 function tour_card(array $t): string

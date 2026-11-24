@@ -3,6 +3,9 @@ declare(strict_types=1);
 require __DIR__ . '/_init.php';
 $user = require_login();
 
+// switch on clean web addresses (/tours instead of /tours.php) once the server is confirmed to support them
+if (is_admin($user) && !pretty_on() && strtotime(setting('pretty_checked_at') ?: '2000-01-01') < time() - 86400) check_pretty_urls();
+
 $c = fn($sql) => (int) val($sql);
 $stats = [
     ['Tour packages', $c('SELECT COUNT(*) FROM tours WHERE active = 1'), 'content.php?type=tours', 'map'],

@@ -14,6 +14,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 } else {
     if (!val('SELECT COUNT(*) FROM subscribers WHERE email = ?', [$email])) {
         insert('subscribers', ['email' => $email, 'name' => mb_substr(input('name'), 0, 120) ?: null, 'ip' => client_ip(), 'created_at' => now()]);
+        audit('visitor_subscribe', 'subscribers', null, ['name' => $email]);
     }
     flash('join_ok', "You're in! Look out for our next update.");
 }

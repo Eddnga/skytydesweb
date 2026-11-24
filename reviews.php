@@ -27,6 +27,7 @@ if (is_post()) {
                 'title' => mb_substr(trim((string) ($_POST['title'] ?? '')), 0, 160) ?: null, 'body' => $body,
                 'tour_id' => $tid && val('SELECT id FROM tours WHERE id = ?', [$tid]) ? $tid : null,
                 'status' => 'pending', 'ip' => client_ip(), 'created_at' => now()]);
+            audit('visitor_review', 'reviews', null, ['name' => $name, 'rating' => $rating . '★']);
         }
         flash('review', setting('review_notice', 'Thank you! Your review will appear once approved.'));
         redirect('reviews.php');

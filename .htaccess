@@ -34,7 +34,35 @@ ErrorDocument 404 /404.php
   ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>
 
+# ---- Rewrite rules ----
+# Chajio runs OpenLiteSpeed, which only reads the rewrite rules in .htaccess.
+# So every protection that matters is repeated here as a rewrite rule.
+# (After uploading a changed .htaccess, press "Restart container" in MyPanel.)
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # Private files and folders → 403 Forbidden
+  RewriteCond %{REQUEST_URI} !/\.well-known/
+  RewriteRule (^|/)\. - [F,L]
+  RewriteRule ^(includes|storage)(/|$) - [F,L]
+  RewriteRule ^install/(schema|seed)\.php$ - [F,L]
+  RewriteRule ^uploads/docs/ - [F,L]
+  RewriteRule ^uploads/.*\.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js|svg)$ - [F,L,NC]
+  RewriteRule ^(config|config\.sample|router)\.php$ - [F,L]
+  RewriteRule \.(sqlite|log|lock|md|ya?ml|sql|zip|bak|env)$ - [F,L,NC]
+
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # Clean addresses: /tours, /tours/big-five, /destinations/maasai-mara, /blog/my-post
+  RewriteRule ^tours/([a-z0-9-]+)/?$ tour.php?slug=$1 [L,QSA]
+  RewriteRule ^destinations/([a-z0-9-]+)/?$ destination.php?slug=$1 [L,QSA]
+  RewriteRule ^blog/([a-z0-9-]+)/?$ post.php?slug=$1 [L,QSA]
+  RewriteRule ^sections/([a-z0-9_]+)/([a-z0-9-]+)/?$ section.php?type=$1&slug=$2 [L,QSA]
+  RewriteRule ^sections/([a-z0-9_]+)/?$ section.php?type=$1 [L,QSA]
+  RewriteRule ^(tours|destinations|offers|gallery|blog|reviews|about|contact|services|faqs|documents)/?$ $1.php [L,QSA]
+
+  # Anything else that doesn't exist → the SkyTydes 404 page
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ 404.php [L]
 </IfModule>

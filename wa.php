@@ -43,6 +43,7 @@ try {
         insert('leads', ['source' => $src, 'item' => $item !== '' ? $item : null, 'name' => $name ?: null, 'travel_date' => $date ?: null,
             'travellers' => ($pax !== '' && $pax !== '0') ? $pax : null, 'message' => $msg ?: null, 'page' => mb_substr($ref, 0, 255),
             'ip' => client_ip(), 'status' => 'new', 'created_at' => now()]);
+        audit('visitor_lead', 'leads', null, ['name' => $item !== '' ? $item : 'General enquiry', 'via' => $src]);
     }
 } catch (Throwable $e) {
     error_log('lead log failed: ' . $e->getMessage());

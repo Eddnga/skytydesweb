@@ -29,6 +29,11 @@ function icon(string $name, int $size = 20): string
         'file' => '<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
         'tag' => '<path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
         'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+        'chart' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+        'pulse' => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+        'db' => '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+        'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/>',
+        'globe' => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>',
         'ext' => '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
     ];
     return '<svg class="ic" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($p[$name] ?? '') . '</svg>';
@@ -51,14 +56,23 @@ function admin_header(string $title, string $active = ''): void
         ['content.php?type=gallery', 'Gallery', 'grid', 'gallery'],
         ['content.php?type=documents', 'Documents', 'file', 'documents'],
         ['content.php?type=team', 'Your hosts', 'users', 'team'],
+    ];
+    foreach (custom_types() as $ct) $nav[] = ['content.php?type=sec_' . $ct['slug'], $ct['label'], 'grid', 'sec_' . $ct['slug']];
+    $nav = array_merge($nav, [
         ['reviews.php', 'Reviews', 'quote', 'reviews', $pending],
         ['leads.php', 'WhatsApp leads', 'chat', 'leads', $newLeads],
         ['subscribers.php', 'Subscribers', 'mail', 'subscribers', (int) val('SELECT COUNT(*) FROM subscribers WHERE created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)])],
         ['settings.php', 'Site settings', 'cog', 'settings'],
-    ];
-    if ($u['role'] === 'admin') {
+    ]);
+    if (is_admin($u)) {
         $nav[] = ['users.php', 'Users', 'users', 'users'];
         $nav[] = ['activity.php', 'Activity log', 'log', 'activity'];
+    }
+    if (is_super($u)) {
+        $nav[] = ['insights.php', 'Visitor insights', 'chart', 'insights'];
+        $nav[] = ['health.php', 'Site health', 'pulse', 'health'];
+        $nav[] = ['database.php', 'Database', 'db', 'database'];
+        $nav[] = ['sections.php', 'Content sections', 'plus', 'sections'];
     }
     header('Cache-Control: no-store');
     ?><!doctype html>
@@ -75,13 +89,14 @@ function admin_header(string $title, string $active = ''): void
 <aside class="side">
   <a href="<?= url('admin/') ?>" class="side-logo"><img src="<?= asset('img/logo-white.svg') ?>" alt="SkyTydes Safaris"></a>
   <nav>
-    <?php $groups = ['dashboard' => '', 'hero' => 'Website', 'reviews' => 'Customers', 'settings' => 'Settings'];
+    <?php $groups = ['dashboard' => '', 'hero' => 'Website', 'reviews' => 'Customers', 'settings' => 'Settings', 'insights' => 'Super admin'];
     foreach ($nav as $n): ?>
       <?php if (!empty($groups[$n[3]])): ?><p class="side-h"><?= h($groups[$n[3]]) ?></p><?php endif; ?>
       <a href="<?= url('admin/' . $n[0]) ?>" class="<?= $active === $n[3] ? 'on' : '' ?>"><?= icon($n[2], 18) ?><span><?= h($n[1]) ?></span><?php if (!empty($n[4])): ?><b class="badge"><?= (int) $n[4] ?></b><?php endif; ?></a>
     <?php endforeach; ?>
   </nav>
 </aside>
+<label for="navtoggle" class="side-shade" aria-hidden="true"></label>
 <main class="main">
   <header class="top">
     <label for="navtoggle" class="burger"><?= icon('menu', 24) ?></label>

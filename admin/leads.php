@@ -7,17 +7,20 @@ if (is_post()) {
     csrf_check();
     $id = (int) input('id');
     $do = input('do');
+    $lead = $id ? row('SELECT item, name, status FROM leads WHERE id = ?', [$id]) : null;
+    $info = $lead ? ['name' => trim(($lead['name'] ?: 'Visitor') . ' — ' . ($lead['item'] ?: 'general enquiry'))] : [];
     if ($do === 'status' && $id) {
         $st = in_array(input('status'), ['new', 'contacted', 'booked', 'closed'], true) ? input('status') : 'new';
         q('UPDATE leads SET status = ? WHERE id = ?', [$st, $id]);
+        $info += ['from' => $lead['status'] ?? '', 'to' => $st];
     } elseif ($do === 'delete' && $id) {
         q('DELETE FROM leads WHERE id = ?', [$id]);
         flash('ok', 'Lead deleted.');
-    } elseif ($do === 'purge' && $user['role'] === 'admin') {
+    } elseif ($do === 'purge' && is_admin($user)) {
         q('DELETE FROM leads WHERE created_at < ?', [date('Y-m-d H:i:s', time() - 365 * 86400)]);
         flash('ok', 'Leads older than a year were removed.');
     }
-    audit('lead_' . $do, 'leads', $id ?: null);
+    audit('lead_' . $do, 'leads', $id ?: null, $info ?: null);
     redirect('admin/leads.php' . (input('f') ? '?f=' . rawurlencode(input('f')) : ''));
 }
 
@@ -73,7 +76,7 @@ admin_header('WhatsApp leads', 'leads');
 </table>
 <?php endif; ?>
 </div>
-<?php if ($user['role'] === 'admin'): ?>
+<?php if (is_admin($user)): ?>
 <form method="post" data-confirm="Remove all leads older than one year?"><?= csrf_field() ?><input type="hidden" name="do" value="purge"><button class="btn ghost sm">Remove leads older than a year</button></form>
 <?php endif; ?>
 <?php admin_footer();
