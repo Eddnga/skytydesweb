@@ -83,5 +83,6 @@ require __DIR__ . '/markdown.php';
 require __DIR__ . '/site.php';
 require __DIR__ . '/insights.php';
 require __DIR__ . '/sections.php';
+require __DIR__ . '/seo.php';
 require __DIR__ . '/migrate.php';
 maybe_migrate();

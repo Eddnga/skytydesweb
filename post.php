@@ -4,7 +4,7 @@ require __DIR__ . '/includes/bootstrap.php';
 $p = row('SELECT * FROM posts WHERE slug = ? AND published = 1 AND published_at <= ?', [input('slug'), now()]);
 if (!$p) not_found();
 $more = rows('SELECT * FROM posts WHERE published = 1 AND id <> ? AND published_at <= ? ORDER BY published_at DESC LIMIT 3', [$p['id'], now()]);
-site_header($p['title'], ['active' => 'blog', 'desc' => $p['excerpt'] ?: excerpt($p['body']), 'image' => $p['image']]);
+site_header($p['title'], ['active' => 'blog', 'desc' => ($p['seo_description'] ?? '') ?: ($p['excerpt'] ?: excerpt($p['body'])), 'image' => $p['image'], 'seo_title' => $p['seo_title'] ?? '', 'og_type' => 'article', 'schema' => [schema_post($p)]]);
 page_hero($p['title'], ($p['category'] ?: 'Journal') . ' · ' . fdate($p['published_at']), $p['image'], '', [['Journal', 'blog.php']]);
 ?>
 <article class="sec">

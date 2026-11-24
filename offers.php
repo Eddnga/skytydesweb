@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 $offers = active_offers();
-site_header('Special offers', ['active' => 'offers', 'desc' => 'Current special offers on Kenya safaris and coast holidays from SkyTydes Safaris.']);
+site_header('Special offers', ['active' => 'offers', 'seo' => 'offers', 'desc' => 'Current special offers on Kenya safaris and coast holidays from SkyTydes Safaris.']);
 page_hero('Current *special offers*', 'Limited time', $offers[0]['image'] ?? (val('SELECT image FROM hero_slides WHERE active = 1 ORDER BY sort LIMIT 1') ?: null), setting('offers_intro'));
 ?>
 <section class="sec">

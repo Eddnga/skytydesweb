@@ -5,7 +5,7 @@ $docs = rows('SELECT * FROM documents WHERE active = 1 AND file IS NOT NULL ORDE
 $featured = $docs && $docs[0]['featured'] ? array_shift($docs) : null;
 $groups = [];
 foreach ($docs as $d) $groups[$d['category'] ?: 'Other'][] = $d;
-site_header('Brochures & documents', ['active' => 'about', 'desc' => 'Read the SkyTydes Safaris company profile, brochures and rates.']);
+site_header('Brochures & documents', ['active' => 'about', 'seo' => 'documents', 'desc' => 'Read the SkyTydes Safaris company profile, brochures and rates.']);
 page_hero('Brochures & *documents*', 'Read & download', val('SELECT image FROM hero_slides WHERE active = 1 ORDER BY sort LIMIT 1 OFFSET 1') ?: null, 'Our company profile, brochures and rates — read them online or save a copy.', [['About', 'about.php']]);
 ?>
 <section class="sec">

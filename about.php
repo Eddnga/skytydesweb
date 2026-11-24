@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 $why = array_map(fn($l) => array_map('trim', explode('|', $l, 2)) + [1 => ''], lines(setting('why_us')));
-site_header('About us', ['active' => 'about']);
+site_header('About us', ['active' => 'about', 'seo' => 'about']);
 page_hero(setting('about_title', 'About us'), 'Our story', val('SELECT image FROM gallery WHERE active = 1 ORDER BY sort LIMIT 1') ?: null);
 ?>
 <section class="sec">

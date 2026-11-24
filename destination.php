@@ -4,7 +4,7 @@ require __DIR__ . '/includes/bootstrap.php';
 $d = row('SELECT * FROM destinations WHERE slug = ? AND active = 1', [input('slug')]);
 if (!$d) not_found();
 $tours = tours_query('t.destination_id = ?', [$d['id']]);
-site_header($d['name'], ['active' => 'destinations', 'desc' => $d['summary'], 'image' => $d['image']]);
+site_header($d['name'] . ' Safaris', ['active' => 'destinations', 'desc' => ($d['seo_description'] ?? '') ?: ($d['summary'] ?: ''), 'image' => $d['image'], 'seo_title' => $d['seo_title'] ?? '', 'schema' => [schema_destination($d)]]);
 page_hero($d['name'], $d['tagline'] ?: $d['region'], $d['image'], (string) $d['summary'], [['Destinations', 'destinations.php']]);
 ?>
 <section class="sec">

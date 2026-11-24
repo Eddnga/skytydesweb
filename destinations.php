@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 $dests = rows('SELECT d.*, (SELECT COUNT(*) FROM tours t WHERE t.destination_id = d.id AND t.active = 1) n FROM destinations d WHERE d.active = 1 ORDER BY d.sort, d.name');
-site_header('Destinations', ['active' => 'destinations']);
+site_header('Destinations', ['active' => 'destinations', 'seo' => 'destinations']);
 page_hero('Destinations', 'Where the tides take you', $dests[0]['image'] ?? null, 'From the plains of the Mara to the white sands of the coast.');
 ?>
 <section class="sec">

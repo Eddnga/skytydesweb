@@ -5,7 +5,7 @@ $faqs = rows('SELECT * FROM faqs WHERE active = 1 ORDER BY sort, id');
 $groups = [];
 foreach ($faqs as $f) $groups[$f['category'] ?: 'General'][] = $f;
 $ld = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn($f) => ['@type' => 'Question', 'name' => $f['question'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => strip_tags(md($f['answer']))]], $faqs)];
-site_header('FAQs', ['active' => 'faqs', 'desc' => 'Answers to common questions about booking a safari with SkyTydes Safaris.', 'head' => '<script type="application/ld+json">' . json_encode($ld, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES) . '</script>']);
+site_header('FAQs', ['active' => 'faqs', 'seo' => 'faqs', 'desc' => 'Answers to common questions about booking a safari with SkyTydes Safaris.', 'head' => '<script type="application/ld+json">' . json_encode($ld, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES) . '</script>']);
 page_hero('Frequently asked questions', 'Good to know', val('SELECT image FROM hero_slides WHERE active = 1 ORDER BY sort DESC LIMIT 1') ?: null);
 ?>
 <section class="sec">

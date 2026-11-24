@@ -8,7 +8,8 @@ $reviews = rows("SELECT * FROM reviews WHERE tour_id = ? AND status = 'approved'
 $related = tours_query('t.id <> ? AND (t.destination_id = ? OR t.featured = 1)', [$t['id'], $t['destination_id'] ?? 0], 'LIMIT 3');
 $price = money($t['price_from'], $t['currency']);
 $tourOffer = array_values(array_filter(active_offers(), fn($o) => (int) $o['tour_id'] === (int) $t['id']))[0] ?? null;
-site_header($t['title'], ['active' => 'tours', 'desc' => $t['summary'] ?: excerpt($t['body']), 'image' => $t['image']]);
+site_header($t['title'], ['active' => 'tours', 'desc' => ($t['seo_description'] ?? '') ?: ($t['summary'] ?: excerpt($t['body'])), 'image' => $t['image'], 'seo_title' => $t['seo_title'] ?? '',
+    'schema' => [schema_tour($t, $days, $t['dest_name']), schema_breadcrumbs([['Tours', 'tours.php']], $t['title'])]]);
 ?>
 <section class="phero tall">
   <div class="phero-bg" style="background-image:url('<?= h(upload_url($t['image'])) ?>')"></div>

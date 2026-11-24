@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -135,6 +135,20 @@ function upgrade_v5(): void
     }
 }
 
+/** Version 6: optional search-engine title & description on tours, destinations and blog posts. */
+function upgrade_v6(): void
+{
+    foreach (['tours', 'destinations', 'posts'] as $t) {
+        foreach (["ALTER TABLE $t ADD COLUMN seo_title VARCHAR(255) NULL", "ALTER TABLE $t ADD COLUMN seo_description TEXT NULL"] as $sql) {
+            try {
+                db()->exec($sql);
+            } catch (Throwable $e) {
+                // column already exists
+            }
+        }
+    }
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -160,6 +174,7 @@ function maybe_migrate(): void
         if ($v < 3) foreach (schema_v3() as $sql) db()->exec($sqlite ? to_sqlite($sql) : $sql);
         if ($v < 4) add_review_source_columns();
         if ($v < 5) upgrade_v5();
+        if ($v < 6) upgrade_v6();
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

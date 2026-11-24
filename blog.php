@@ -10,7 +10,7 @@ if ($cat !== '') { $where .= ' AND category = ?'; $params[] = $cat; }
 $total = (int) val("SELECT COUNT(*) FROM posts WHERE $where", $params);
 $posts = rows("SELECT * FROM posts WHERE $where ORDER BY published_at DESC LIMIT $per OFFSET " . (($page - 1) * $per), $params);
 $cats = array_column(rows('SELECT DISTINCT category FROM posts WHERE published = 1 AND category IS NOT NULL ORDER BY category'), 'category');
-site_header('Journal', ['active' => 'blog', 'desc' => 'Safari tips, destination guides and stories from SkyTydes Safaris.']);
+site_header('Journal', ['active' => 'blog', 'seo' => 'blog', 'desc' => 'Safari tips, destination guides and stories from SkyTydes Safaris.']);
 page_hero('The journal', 'Tips & stories', $posts[0]['image'] ?? null);
 ?>
 <section class="sec">

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 $services = rows('SELECT * FROM services WHERE active = 1 ORDER BY sort, id');
-site_header('Services', ['active' => 'services']);
+site_header('Services', ['active' => 'services', 'seo' => 'services']);
 page_hero('Our services', 'What we do', val('SELECT image FROM hero_slides WHERE active = 1 ORDER BY sort LIMIT 1 OFFSET 1') ?: null, 'Everything you need for a smooth, unforgettable trip.');
 ?>
 <section class="sec">

@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 $items = rows('SELECT * FROM gallery WHERE active = 1 ORDER BY sort, id DESC');
 $cats = array_values(array_unique(array_filter(array_column($items, 'category'))));
-site_header('Gallery', ['active' => 'gallery']);
+site_header('Gallery', ['active' => 'gallery', 'seo' => 'gallery']);
 page_hero('Gallery', 'Moments from the wild', $items[0]['image'] ?? null);
 ?>
 <section class="sec">

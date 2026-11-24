@@ -63,7 +63,19 @@ function site_header(string $title, array $o = []): void
     $img = $o['image'] ?? null;
     $solid = !empty($o['solid']);
     $GLOBALS['__page_title'] = $title === '' ? 'Home' : $title;
-    $full = $title === '' ? setting('site_name', 'SkyTydes Safaris') . ' · ' . setting('tagline') : $title . ' · ' . setting('site_name', 'SkyTydes Safaris');
+    $full = $title === '' ? setting('site_name', 'SkyTydes Safaris') . ' · ' . setting('tagline') : $title . ' | ' . setting('site_name', 'SkyTydes Safaris');
+    if (!empty($o['seo'])) {
+        [$st, $sd] = page_seo($o['seo']);
+        if ($st !== '') $full = $st;
+        if ($sd !== '') $desc = $sd;
+    }
+    if (!empty($o['seo_title'])) $full = $o['seo_title'];
+    $shareImg = abs_image($img ?: default_share_image());
+    $schema = $o['schema'] ?? [];
+    if ($active === 'home') array_unshift($schema, schema_business(), schema_website());
+    if (in_array($o['seo'] ?? '', ['about', 'contact'], true)) $schema[] = schema_business();
+    $gv = verification_code('google_verification');
+    $bv = verification_code('bing_verification');
     $nav = [['', 'Home', 'home', ''], ['tours.php', 'Tours', 'tours', 'tours'], ['destinations.php', 'Destinations', 'destinations', 'dest'], ['offers.php', 'Offers', 'offers', ''], ['gallery.php', 'Gallery', 'gallery', ''], ['blog.php', 'Journal', 'blog', ''], ['reviews.php', 'Reviews', 'reviews', ''], ['about.php', 'About', 'about', 'about'], ['contact.php', 'Contact', 'contact', '']];
     $megaTours = rows('SELECT t.title, t.slug, t.duration_days, t.price_from, t.currency, d.name dest FROM tours t LEFT JOIN destinations d ON d.id = t.destination_id WHERE t.active = 1 ORDER BY t.featured DESC, t.sort, t.id DESC LIMIT 6');
     $megaDest = rows('SELECT name, slug, tagline, image FROM destinations WHERE active = 1 ORDER BY sort, name LIMIT 6');
@@ -75,9 +87,15 @@ function site_header(string $title, array $o = []): void
 <title><?= h($full) ?></title>
 <meta name="description" content="<?= h(excerpt($desc, 165)) ?>">
 <link rel="canonical" href="<?= h($canon) ?>">
-<meta property="og:type" content="website"><meta property="og:title" content="<?= h($full) ?>"><meta property="og:description" content="<?= h(excerpt($desc, 165)) ?>">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="<?= h($o['og_type'] ?? 'website') ?>"><meta property="og:site_name" content="<?= h(setting('site_name', 'SkyTydes Safaris')) ?>"><meta property="og:locale" content="en_KE">
+<meta property="og:title" content="<?= h($full) ?>"><meta property="og:description" content="<?= h(excerpt($desc, 165)) ?>">
 <meta property="og:url" content="<?= h($canon) ?>">
-<?php if ($img): ?><meta property="og:image" content="<?= h(abs_url(ltrim(str_replace(BASE_PATH, '', upload_url($img)), '/'))) ?>"><?php endif; ?>
+<?php if ($shareImg): ?><meta property="og:image" content="<?= h($shareImg) ?>"><meta property="og:image:alt" content="<?= h($title ?: setting('site_name', 'SkyTydes Safaris')) ?>"><?php endif; ?>
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="<?= h($full) ?>"><meta name="twitter:description" content="<?= h(excerpt($desc, 165)) ?>"><?php if ($shareImg): ?><meta name="twitter:image" content="<?= h($shareImg) ?>"><?php endif; ?>
+<?php if ($gv): ?><meta name="google-site-verification" content="<?= h($gv) ?>"><?php endif; ?>
+<?php if ($bv): ?><meta name="msvalidate.01" content="<?= h($bv) ?>"><?php endif; ?>
+<?php foreach ($schema as $sc) echo json_ld($sc); ?>
 <meta name="theme-color" content="#023F0A">
 <link rel="icon" href="<?= asset('img/favicon-32.png') ?>" type="image/png" sizes="32x32">
 <link rel="icon" href="<?= asset('img/favicon-192.png') ?>" type="image/png" sizes="192x192">
@@ -116,7 +134,7 @@ function site_header(string $title, array $o = []): void
               <?php elseif ($n[3] === 'dest'): ?>
                 <div class="mega-grid">
                   <?php foreach ($megaDest as $md): ?>
-                    <a href="<?= url('destination.php?slug=' . rawurlencode($md['slug'])) ?>"><img src="<?= h(upload_url($md['image'], 'sm')) ?>" alt="" loading="lazy"><b><?= h($md['name']) ?></b><small><?= h($md['tagline']) ?></small></a>
+                    <a href="<?= url('destination.php?slug=' . rawurlencode($md['slug'])) ?>"><img src="<?= h(upload_url($md['image'], 'sm')) ?>" alt="<?= h($md['name']) ?>, Kenya" loading="lazy"><b><?= h($md['name']) ?></b><small><?= h($md['tagline']) ?></small></a>
                   <?php endforeach; ?>
                 </div>
               <?php else: ?>
@@ -166,6 +184,7 @@ function page_hero(?string $title, ?string $eyebrow = '', ?string $img = null, ?
   <div class="phero-bg" style="background-image:url('<?= h(upload_url($img)) ?>')"></div>
   <div class="phero-shade"></div>
   <div class="wrap phero-in">
+    <?= json_ld(schema_breadcrumbs($crumbs, strip_tags(str_replace('*', '', $title)))) ?>
     <nav class="crumbs" aria-label="Breadcrumb"><a href="<?= url('') ?>">Home</a><?php foreach ($crumbs as $c): ?> <span>/</span> <a href="<?= url($c[1]) ?>"><?= h($c[0]) ?></a><?php endforeach; ?> <span>/</span> <span aria-current="page"><?= h(strip_tags(str_replace('*', '', $title))) ?></span></nav>
     <?php if ($eyebrow): ?><p class="eyebrow"><?= h($eyebrow) ?></p><?php endif; ?>
     <h1><?= hl($title) ?></h1>
@@ -285,7 +304,7 @@ function post_card(array $p): string
 {
     ob_start(); ?>
 <article class="pcard">
-  <a href="<?= url('post.php?slug=' . rawurlencode($p['slug'])) ?>" class="pcard-img"><img src="<?= h(upload_url($p['image'], 'sm')) ?>" alt="" loading="lazy"></a>
+  <a href="<?= url('post.php?slug=' . rawurlencode($p['slug'])) ?>" class="pcard-img"><img src="<?= h(upload_url($p['image'], 'sm')) ?>" alt="<?= h($p['title']) ?>" loading="lazy"></a>
   <p class="kicker"><?= h($p['category'] ?: 'Journal') ?> · <?= h(fdate($p['published_at'])) ?></p>
   <h3><a href="<?= url('post.php?slug=' . rawurlencode($p['slug'])) ?>"><?= h($p['title']) ?></a></h3>
   <p><?= h(excerpt($p['excerpt'] ?: $p['body'], 130)) ?></p>
@@ -497,7 +516,7 @@ function doc_card(array $d): string
 {
     ob_start(); ?>
 <article class="doccard">
-  <div class="doccard-img"><?php if ($d['image']): ?><img src="<?= h(upload_url($d['image'], 'sm')) ?>" alt="" loading="lazy"><?php else: ?><span class="pdfmark"><?= sicon('file', 40) ?><b>PDF</b></span><?php endif; ?>
+  <div class="doccard-img"><?php if ($d['image']): ?><img src="<?= h(upload_url($d['image'], 'sm')) ?>" alt="<?= h($d['title']) ?>" loading="lazy"><?php else: ?><span class="pdfmark"><?= sicon('file', 40) ?><b>PDF</b></span><?php endif; ?>
     <?php if ($d['access'] === 'request'): ?><span class="otag">On request</span><?php endif; ?></div>
   <div class="doccard-body">
     <h3><?= h($d['title']) ?></h3>

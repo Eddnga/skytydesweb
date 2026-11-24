@@ -18,7 +18,7 @@ $creds = array_map(fn($l) => array_map('trim', explode('|', $l, 2)) + [1 => ''],
 $wayImgs = array_column(rows('SELECT image FROM tours WHERE active = 1 AND image IS NOT NULL ORDER BY featured DESC, sort LIMIT 3'), 'image');
 $why = array_map(fn($l) => array_map('trim', explode('|', $l, 2)) + [1 => ''], lines(setting('why_us')));
 
-site_header('', ['active' => 'home', 'image' => $slides[0]['image'] ?? null]);
+site_header('', ['active' => 'home', 'seo' => 'home', 'image' => $slides[0]['image'] ?? null]);
 ?>
 <section class="hero" data-slider>
   <?php foreach ($slides as $i => $s): ?>
@@ -59,7 +59,7 @@ site_header('', ['active' => 'home', 'image' => $slides[0]['image'] ?? null]);
     <div class="ways">
       <?php foreach ($ways as $i => $w): ?>
       <a class="way" href="<?= h(preg_match('#^https?://#', $w[2]) ? $w[2] : url($w[2])) ?>">
-        <img src="<?= h(upload_url($wayImgs[$i % max(1, count($wayImgs))] ?? null, 'sm')) ?>" alt="" loading="lazy">
+        <img src="<?= h(upload_url($wayImgs[$i % max(1, count($wayImgs))] ?? null, 'sm')) ?>" alt="<?= h($w[0]) ?>" loading="lazy">
         <span class="way-in"><span class="way-n"><?= sprintf('%02d', $i + 1) ?></span><b><?= h($w[0]) ?></b><small><?= h($w[1]) ?></small><em>Explore <?= sicon('arrow', 16) ?></em></span>
       </a>
       <?php endforeach; ?>

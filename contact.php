@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
-site_header('Contact', ['active' => 'contact']);
+site_header('Contact', ['active' => 'contact', 'seo' => 'contact']);
 page_hero('Get in touch', 'Contact us', val('SELECT image FROM destinations WHERE active = 1 ORDER BY sort DESC LIMIT 1') ?: null, 'The fastest way to reach us is WhatsApp — we reply quickly during working hours.');
 $tel = fn($p) => 'tel:' . preg_replace('/[^\d+]/', '', $p);
 ?>

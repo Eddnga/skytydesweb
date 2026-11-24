@@ -32,7 +32,7 @@ if ($slug !== '') {
     if (!$r) not_found();
     $desc = '';
     foreach ($t['fields'] as $f) if (in_array($f['type'], ['md', 'textarea'], true) && !empty($r[section_col($t, $f)])) { $desc = excerpt(strip_tags((string) $r[section_col($t, $f)]), 160); break; }
-    site_header($r['title'], ['active' => 'sec_' . $t['slug'], 'desc' => $desc ?: $t['label'] . ' — SkyTydes Safaris', 'image' => $imgCol ? $r[$imgCol] : null]);
+    site_header($r['title'], ['active' => 'sec_' . $t['slug'], 'desc' => $desc ?: $r['title'] . ' — one of the ' . mb_strtolower($t['label']) . ' we arrange at SkyTydes Safaris, Nairobi. Ask us on WhatsApp.', 'image' => $imgCol ? $r[$imgCol] : null]);
     page_hero($r['title'], $t['one_label'], $imgCol ? $r[$imgCol] : null, '', [[$t['label'], $base]]);
     $facts = []; $blocks = []; $gallery = [];
     foreach ($t['fields'] as $f) {
@@ -61,7 +61,7 @@ if ($slug !== '') {
 }
 
 $items = rows("SELECT * FROM $T WHERE active = 1 ORDER BY sort ASC, id DESC");
-site_header($t['label'], ['active' => 'sec_' . $t['slug'], 'desc' => $t['intro'] ? excerpt((string) $t['intro'], 160) : $t['label'] . ' — SkyTydes Safaris']);
+site_header($t['label'], ['active' => 'sec_' . $t['slug'], 'desc' => $t['intro'] ? excerpt((string) $t['intro'], 160) : 'Explore ' . mb_strtolower($t['label']) . ' with SkyTydes Safaris — Kenya safaris and coast holidays planned for you from Nairobi.']);
 page_hero($t['label'], 'SkyTydes Safaris', $imgCol && $items ? $items[0][$imgCol] : null);
 ?>
 <section class="sec">

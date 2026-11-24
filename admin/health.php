@@ -133,6 +133,9 @@ $add('Content & SEO', setting('whatsapp') !== '' ? 'ok' : 'bad', 'WhatsApp numbe
 $socials = count(array_filter(['social_facebook', 'social_instagram', 'social_tiktok', 'social_youtube'], fn($k) => setting($k) !== ''));
 $add('Content & SEO', $socials ? 'ok' : 'warn', 'Social links', "$socials of 4 added.", $socials < 4 ? 'admin/settings.php' : '');
 $add('Content & SEO', 'ok', 'Sitemap for Google', abs_url('sitemap.xml'), '');
+$add('Content & SEO', verification_code('google_verification') !== '' ? 'ok' : 'warn', 'Google Search Console', verification_code('google_verification') !== '' ? 'Verification tag is on every page.' : 'Not connected yet — Google can\'t show you searches, clicks or indexing problems.', verification_code('google_verification') !== '' ? '' : 'admin/settings.php');
+try { $noSeo = (int) val("SELECT COUNT(*) FROM tours WHERE active = 1 AND (seo_title IS NULL OR seo_title = '')"); } catch (Throwable $e) { $noSeo = 0; }
+$add('Content & SEO', 'ok', 'Business details for Google (schema)', 'Travel agency, tours, destinations, blog posts and breadcrumbs are described to search engines automatically.' . ($noSeo ? " Tip: $noSeo tour(s) use their plain name as the Google title — adding a keyword-rich \"Google title\" can help." : ''), '');
 $notFound = rows("SELECT path, COUNT(*) n, MAX(created_at) last FROM page_views WHERE title = '404 Not found' AND created_at >= ? GROUP BY path ORDER BY n DESC LIMIT 8", [date('Y-m-d H:i:s', time() - 30 * 86400)]);
 
 $log = is_file(STORAGE . '/logs/php-error.log') ? (string) file_get_contents(STORAGE . '/logs/php-error.log', false, null, max(0, filesize(STORAGE . '/logs/php-error.log') - 6000)) : '';

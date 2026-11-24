@@ -5,7 +5,7 @@ $dests = rows('SELECT d.id, d.name, d.slug FROM destinations d WHERE d.active = 
 $f = input('d');
 $cur = $f !== '' ? row('SELECT * FROM destinations WHERE slug = ? AND active = 1', [$f]) : null;
 $tours = $cur ? tours_query('t.destination_id = ?', [$cur['id']]) : tours_query();
-site_header($cur ? $cur['name'] . ' tours' : 'Tour packages', ['active' => 'tours', 'desc' => 'Kenya safari packages and coast holidays by SkyTydes Safaris — book on WhatsApp.']);
+site_header($cur ? $cur['name'] . ' tours' : 'Tour packages', ['active' => 'tours', 'seo' => $cur ? '' : 'tours', 'desc' => 'Kenya safari packages and coast holidays by SkyTydes Safaris — book on WhatsApp.']);
 page_hero($cur ? 'Tours in ' . $cur['name'] : 'Tour packages', 'Find your trip', $cur['image'] ?? (val('SELECT image FROM tours WHERE active = 1 AND image IS NOT NULL ORDER BY featured DESC, sort LIMIT 1') ?: null), 'Every trip can be made private and shaped around your dates and budget.');
 ?>
 <section class="sec">

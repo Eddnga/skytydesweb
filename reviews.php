@@ -42,7 +42,7 @@ $tours = rows('SELECT id, title FROM tours WHERE active = 1 ORDER BY title');
 $preTour = (int) ($old['tour_id'] ?? input('tour'));
 $ts = (string) time();
 $openForm = $errors || input('write') === '1';
-site_header('Reviews', ['active' => 'reviews', 'desc' => 'Read reviews from SkyTydes Safaris travellers and share your own experience.']);
+site_header('Reviews', ['active' => 'reviews', 'seo' => 'reviews', 'desc' => 'Read reviews from SkyTydes Safaris travellers and share your own experience.']);
 page_hero('Guest *reviews*', 'In their words', val('SELECT image FROM gallery WHERE active = 1 ORDER BY sort LIMIT 1 OFFSET 1') ?: null);
 ?>
 <section class="sec">

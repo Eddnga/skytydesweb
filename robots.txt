@@ -1,4 +1,8 @@
 User-agent: *
 Disallow: /admin/
 Disallow: /install/
+Disallow: /wa.php
+Disallow: /subscribe.php
+Disallow: /*?write=
+
 Sitemap: https://skytydessafaris.com/sitemap.xml
