@@ -4,12 +4,13 @@ require __DIR__ . '/includes/bootstrap.php';
 $d = row('SELECT * FROM destinations WHERE slug = ? AND active = 1', [input('slug')]);
 if (!$d) not_found();
 $tours = tours_query('t.destination_id = ?', [$d['id']]);
-site_header($d['name'] . ' Safaris', ['active' => 'destinations', 'desc' => ($d['seo_description'] ?? '') ?: ($d['summary'] ?: ''), 'image' => $d['image'], 'ga_item' => ['name' => $d['name'], 'category' => 'Destination'], 'seo_title' => $d['seo_title'] ?? '', 'schema' => [schema_destination($d)]]);
+$qa = destination_answers($d, $tours);
+site_header($d['name'] . ' Safaris', ['active' => 'destinations', 'desc' => ($d['seo_description'] ?? '') ?: ($d['summary'] ?: ''), 'image' => $d['image'], 'ga_item' => ['name' => $d['name'], 'category' => 'Destination'], 'seo_title' => $d['seo_title'] ?? '', 'schema' => [schema_destination($d), schema_faq($qa)]]);
 page_hero($d['name'], $d['tagline'] ?: $d['region'], $d['image'], (string) $d['summary'], [['Destinations', 'destinations.php']]);
 ?>
 <section class="sec">
   <div class="wrap tour-grid">
-    <div class="tour-main prose big"><?= md($d['body']) ?></div>
+    <div class="tour-main"><div class="prose big"><?= md($d['body']) ?></div><?= answers_block($qa, 'Quick answers about ' . $d['name']) ?></div>
     <aside class="book">
       <div class="book-card">
         <?php if ($d['region']): ?><p class="kv"><span>Region</span><b><?= h($d['region']) ?></b></p><?php endif; ?>

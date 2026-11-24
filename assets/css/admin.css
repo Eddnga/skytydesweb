@@ -274,3 +274,25 @@ h3.sub{font-size:17px;margin:14px 0 2px}
 .side nav::-webkit-scrollbar{display:block;width:6px}
 .side nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:6px}
 .card.table-wrap>p.muted.small,.card.table-wrap>p.hint{padding:0 22px}
+/* gallery bulk upload */
+.bulk2{padding:18px 20px;margin-bottom:18px;display:flex;flex-direction:column;gap:14px}
+.bulk-head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}.bulk-head strong{display:inline-flex;gap:8px;align-items:center}
+.drop{position:relative;display:block;border:2px dashed #C9D3BF;border-radius:14px;background:#FAFBF8;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--lg);background:#F1F7EA}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.drop-in{display:flex;flex-direction:column;align-items:center;gap:4px;padding:26px 16px;color:var(--muted);text-align:center;pointer-events:none}
+.drop-in b{color:var(--ink);font-weight:500}.drop-in svg{color:var(--lg)}
+.bulk-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.btile{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.btile img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.btile input{border:0;border-top:1px solid var(--line);padding:8px 10px;font:inherit;font-size:13px;min-width:0}
+.bst{font-size:11.5px;color:var(--muted);padding:0 10px 8px}
+.brm{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:18px;line-height:1;cursor:pointer}
+.btile.up{opacity:.75}.btile.ok{border-color:#9CCB7C}.btile.ok .bst{color:#2D7A0C}.btile.bad{border-color:var(--red)}.btile.bad .bst{color:var(--red)}
+.bulk-bar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;justify-content:space-between}
+.bulk-bar label{display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:240px;flex:1}
+.bulk-bar input{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+.bulk-go{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bulk-progress{position:relative;height:30px;border-radius:999px;background:#EEF1EA;overflow:hidden}
+.bulk-progress i{position:absolute;inset:0 auto 0 0;width:0;background:var(--lg);transition:width .3s}
+.bulk-progress span{position:relative;display:block;text-align:center;line-height:30px;font-size:13px;font-weight:500}

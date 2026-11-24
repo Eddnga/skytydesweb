@@ -7,9 +7,11 @@ $days = rows('SELECT * FROM itinerary_days WHERE tour_id = ? ORDER BY day_no', [
 $reviews = rows("SELECT * FROM reviews WHERE tour_id = ? AND status = 'approved' ORDER BY approved_at DESC LIMIT 6", [$t['id']]);
 $related = tours_query('t.id <> ? AND (t.destination_id = ? OR t.featured = 1)', [$t['id'], $t['destination_id'] ?? 0], 'LIMIT 3');
 $price = money($t['price_from'], $t['currency']);
+$bestTime = $t['destination_id'] ? (string) val('SELECT best_time FROM destinations WHERE id = ?', [$t['destination_id']]) : '';
+$qa = tour_answers($t, $days, $bestTime ?: null);
 $tourOffer = array_values(array_filter(active_offers(), fn($o) => (int) $o['tour_id'] === (int) $t['id']))[0] ?? null;
 site_header($t['title'], ['active' => 'tours', 'desc' => ($t['seo_description'] ?? '') ?: ($t['summary'] ?: excerpt($t['body'])), 'image' => $t['image'], 'ga_item' => ['name' => $t['title'], 'category' => $t['dest_name'] ?: 'Tour', 'price' => $t['price_from'], 'currency' => $t['currency'] ?: 'KES'], 'seo_title' => $t['seo_title'] ?? '',
-    'schema' => [schema_tour($t, $days, $t['dest_name']), schema_breadcrumbs([['Tours', 'tours.php']], $t['title'])]]);
+    'schema' => [schema_tour($t, $days, $t['dest_name']), schema_breadcrumbs([['Tours', 'tours.php']], $t['title']), schema_faq($qa)]]);
 ?>
 <section class="phero tall">
   <div class="phero-bg" style="background-image:url('<?= h(upload_url($t['image'])) ?>')"></div>
@@ -53,6 +55,7 @@ site_header($t['title'], ['active' => 'tours', 'desc' => ($t['seo_description'] 
         <?php if ($exc): ?><div><h2 class="h3">Not included</h2><ul class="ticks no"><?php foreach ($exc as $l): ?><li><?= sicon('x', 18) ?><?= h($l) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
       </div>
       <?php endif; ?>
+      <?= answers_block($qa, 'Quick answers about this trip') ?>
       <?php if ($reviews): ?><h2 class="h3">Reviews</h2><?= reviews_slider($reviews) ?><?php endif; ?>
       <p class="tour-review"><a class="link-more" href="<?= url('reviews.php?write=1&tour=' . (int) $t['id'] . '#write') ?>"><?= sicon('star', 16) ?> Been on this trip? Write a review</a></p>
     </div>

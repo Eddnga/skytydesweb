@@ -17,6 +17,8 @@ foreach ($deny as $re) {
 }
 $routes = [
     '#^sitemap\.xml$#' => 'sitemap.php',
+    '#^llms\.txt$#' => 'llms.php',
+    '#^llms-full\.txt$#' => 'llms.php?full=1',
     '#^tours/([a-z0-9-]+)/?$#' => 'tour.php?slug=$1',
     '#^destinations/([a-z0-9-]+)/?$#' => 'destination.php?slug=$1',
     '#^blog/([a-z0-9-]+)/?$#' => 'post.php?slug=$1',

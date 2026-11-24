@@ -252,6 +252,19 @@ function audit(string $action, string $entity = '', ?int $id = null, ?array $det
         }
     }
 }
+/** A caption from a file name — but not from camera names like IMG_2034 or WhatsApp Image 2026-…  */
+function photo_caption_from_name(string $name): string
+{
+    $base = trim(pathinfo($name, PATHINFO_FILENAME));
+    if ($base === '' || preg_match('/^(img|dsc|dscn|dcim|pxl|mvimg|photo|image|screenshot|whatsapp image|signal|p\d|\d)[\s_\-\d.()a-z]*$/i', $base) && preg_match('/\d{3,}/', $base)) return '';
+    return ucfirst(mb_substr(trim(preg_replace('/[\s_\-]+/', ' ', $base)), 0, 120));
+}
+function ini_bytes_helper(string $v): int
+{
+    $v = trim($v); $n = (int) $v;
+    return match (strtolower(substr($v, -1))) { 'g' => $n * 1073741824, 'm' => $n * 1048576, 'k' => $n * 1024, default => $n };
+}
+
 /** "Chrome on Android", "Safari on iPhone"… */
 function ua_summary(?string $ua = null): string
 {

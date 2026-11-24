@@ -52,6 +52,8 @@ ErrorDocument 404 /404.php
   RewriteRule \.(sqlite|log|lock|md|ya?ml|sql|zip|bak|env)$ - [F,L,NC]
 
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
+  RewriteRule ^llms\.txt$ llms.php [L]
+  RewriteRule ^llms-full\.txt$ llms.php?full=1 [L]
 
   # Clean addresses: /tours, /tours/big-five, /destinations/maasai-mara, /blog/my-post
   RewriteRule ^tours/([a-z0-9-]+)/?$ tour.php?slug=$1 [L,QSA]

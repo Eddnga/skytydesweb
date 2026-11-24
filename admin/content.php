@@ -46,6 +46,33 @@ if (is_post()) {
         redirect($self);
     }
 
+    if ($action === 'bulk_one' && !empty($E['bulk_upload'])) {
+        // one photo per request, so big batches never hit the server's upload limit
+        header('Content-Type: application/json');
+        $f = $_FILES['image'] ?? null;
+        try {
+            if (!$f || $f['error'] === UPLOAD_ERR_NO_FILE) throw new RuntimeException('No file received.');
+            if (in_array($f['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) throw new RuntimeException('Too large for the server (limit ' . ini_get('upload_max_filesize') . ').');
+            $path = store_image($f);
+            $cap = mb_substr(trim((string) input('caption')), 0, 160) ?: photo_caption_from_name((string) $f['name']);
+            $nid = insert($T, ['image' => $path, 'caption' => $cap ?: null, 'category' => mb_substr(input('category'), 0, 80) ?: null, 'sort' => 0, 'active' => 1, 'created_at' => now()]);
+            echo json_encode(['ok' => true, 'id' => $nid, 'thumb' => upload_url($path, 'sm')]);
+        } catch (Throwable $e) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'error' => $e instanceof RuntimeException ? $e->getMessage() : 'Could not save this photo.']);
+        }
+        exit;
+    }
+    if ($action === 'bulk_done' && !empty($E['bulk_upload'])) {
+        $added = max(0, (int) input('added')); $failed = max(0, (int) input('failed'));
+        audit('bulk_upload', $T, null, ['added' => $added, 'failed' => $failed, 'category' => input('category')]);
+        if ($added) flash('ok', "$added photo" . ($added === 1 ? '' : 's') . ' added to the gallery.');
+        if ($failed) flash('error', "$failed photo" . ($failed === 1 ? '' : 's') . ' could not be uploaded — see the list for reasons.');
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
     if ($action === 'bulk' && !empty($E['bulk_upload'])) {
         $files = $_FILES['images'] ?? null;
         $n = 0; $errs = [];
@@ -55,7 +82,7 @@ if (is_post()) {
                 if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) continue;
                 try {
                     $path = store_image(['name' => $nm, 'type' => $files['type'][$i], 'tmp_name' => $files['tmp_name'][$i], 'error' => $files['error'][$i], 'size' => $files['size'][$i]]);
-                    insert($T, ['image' => $path, 'caption' => pathinfo($nm, PATHINFO_FILENAME) === '' ? null : ucfirst(str_replace(['-', '_'], ' ', mb_substr(pathinfo($nm, PATHINFO_FILENAME), 0, 120))), 'category' => $cat ?: null, 'sort' => 0, 'active' => 1, 'created_at' => now()]);
+                    insert($T, ['image' => $path, 'caption' => photo_caption_from_name((string) $nm) ?: null, 'category' => $cat ?: null, 'sort' => 0, 'active' => 1, 'created_at' => now()]);
                     $n++;
                 } catch (RuntimeException $e) {
                     $errs[] = $nm . ': ' . $e->getMessage();
@@ -338,12 +365,21 @@ admin_header($E['label'], $type);
 </div>
 <?php if (!empty($E['help'])): ?><p class="muted"><?= h($E['help']) ?></p><?php endif; ?>
 <?php if (!empty($E['bulk_upload'])): ?>
-<form method="post" enctype="multipart/form-data" class="card bulk">
+<?php $cats = array_column(rows("SELECT DISTINCT category FROM $T WHERE category IS NOT NULL AND category <> '' ORDER BY category"), 'category'); ?>
+<form method="post" enctype="multipart/form-data" class="card bulk2" data-bulk="<?= h(url($self)) ?>" data-max-mb="<?= (int) floor(min(ini_bytes_helper((string) ini_get('upload_max_filesize')), ini_bytes_helper((string) ini_get('post_max_size'))) / 1048576) ?>">
   <?= csrf_field() ?><input type="hidden" name="action" value="bulk">
-  <strong>Upload several photos at once</strong>
-  <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp" required>
-  <input name="category" placeholder="Category (optional)" maxlength="80">
-  <button class="btn sm">Upload</button>
+  <div class="bulk-head"><strong><?= icon('image', 18) ?> Bulk upload photos</strong><span class="muted small">Drop in as many as you like — they upload one by one, and big phone photos are resized automatically.</span></div>
+  <label class="drop" data-drop>
+    <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp" data-bulk-input>
+    <span class="drop-in"><?= icon('upload', 28) ?><b>Drag photos here</b><span>or click to choose · JPG, PNG or WebP</span></span>
+  </label>
+  <div class="bulk-tiles" data-tiles hidden></div>
+  <div class="bulk-bar" data-bar hidden>
+    <label>Category for these photos <span class="opt">(optional)</span><input name="category" list="galCats" maxlength="80" placeholder="e.g. Wildlife, Lodges, Beach, Guests"></label>
+    <datalist id="galCats"><?php foreach ($cats as $c): ?><option value="<?= h($c) ?>"><?php endforeach; ?></datalist>
+    <div class="bulk-go"><span class="small muted" data-count></span><button type="button" class="btn ghost sm" data-clear>Clear</button><button class="btn" data-start><?= icon('upload', 18) ?> Upload photos</button></div>
+  </div>
+  <div class="bulk-progress" data-progress hidden><i></i><span></span></div>
 </form>
 <?php endif; ?>
 <div class="card table-wrap">

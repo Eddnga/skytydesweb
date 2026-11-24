@@ -636,3 +636,13 @@ a.rsrc:hover{filter:brightness(.95)}
 .strip.auto:hover .strip-track,.strip.auto.paused .strip-track,.strip.auto:focus-within .strip-track{animation-play-state:paused}
 @keyframes strip-run{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.strip-track{animation-duration:calc(var(--dur,60s) * 3)}}
+
+/* quick answers (for readers and answer engines) */
+.qa{margin:44px 0 8px;padding:26px 28px;background:#F4F1E8;border-radius:18px}
+.qa h2{margin:0 0 14px}
+.qa dl{margin:0;display:flex;flex-direction:column}
+.qa dl>div{padding:14px 0;border-top:1px solid rgba(2,63,10,.12)}
+.qa dl>div:first-child{border-top:0;padding-top:0}
+.qa dt{font-weight:600;color:var(--green);margin-bottom:4px}
+.qa dd{margin:0;line-height:1.6;color:var(--ink2,#33403A)}
+@media (max-width:600px){.qa{padding:20px 18px}}

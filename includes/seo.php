@@ -106,7 +106,6 @@ function schema_business(): array
         'contactPoint' => array_map(fn($p) => ['@type' => 'ContactPoint', 'telephone' => $p, 'contactType' => 'reservations', 'availableLanguage' => ['English', 'Swahili']], $phones),
     ];
     if ($same) $biz['sameAs'] = $same;
-    if (setting('hours')) $biz['openingHours'] = setting('hours');
     return array_filter($biz, fn($v) => $v !== null && $v !== '' && $v !== []);
 }
 
@@ -173,4 +172,64 @@ function schema_post(array $p): array
         'publisher' => ['@type' => 'Organization', 'name' => setting('site_name', 'SkyTydes Safaris'), 'logo' => ['@type' => 'ImageObject', 'url' => abs_url('assets/img/favicon-512.png')]],
         'mainEntityOfPage' => abs_url('post.php?slug=' . rawurlencode($p['slug'])),
     ], fn($v) => $v !== null && $v !== '');
+}
+
+// ---------- Answer-engine (AEO/GEO) helpers ----------
+// Short, factual question → answer pairs, shown on the page AND described as
+// FAQPage data, so Google's AI Overviews, ChatGPT, Perplexity and others can
+// quote SkyTydes directly.
+
+function list_sentence(array $items, int $max = 8): string
+{
+    $items = array_slice(array_values(array_filter(array_map('trim', $items))), 0, $max);
+    if (count($items) < 2) return $items[0] ?? '';
+    $last = array_pop($items);
+    return implode(', ', $items) . ' and ' . $last;
+}
+
+function contact_answer(): string
+{
+    $phones = array_values(array_filter([setting('phone1'), setting('phone2')]));
+    return 'Message SkyTydes Safaris on WhatsApp' . ($phones ? ' (' . implode(' or ', $phones) . ')' : '') . ' or email ' . setting('email', 'info@skytydessafaris.com') . ' with your dates and group size. Nothing is booked or paid until your trip is confirmed.';
+}
+
+function tour_answers(array $t, array $days, ?string $bestTime): array
+{
+    $n = (int) $t['duration_days'];
+    $name = $t['title'];
+    $qa = [];
+    if ($n) $qa[] = ["How long is the $name?", $n . ' day' . ($n > 1 ? 's' : '') . ($n > 1 ? ' and ' . ($n - 1) . ' night' . ($n > 2 ? 's' : '') : '') . ($t['dest_name'] ? ' in ' . $t['dest_name'] . ', Kenya' : ' in Kenya') . '.' . ($days ? ' Day by day: ' . list_sentence(array_map(fn($d) => 'Day ' . $d['day_no'] . ' – ' . $d['title'], $days), 10) . '.' : '')];
+    $price = money($t['price_from'], $t['currency'] ?: 'KES');
+    $qa[] = ["How much does the $name cost?", $price ? "From $price" . ($t['price_note'] ? ' ' . trim($t['price_note']) : '') . '. The final price depends on your dates, group size and where you stay.' : 'The price depends on your dates, group size and choice of lodge. SkyTydes Safaris sends a quote on WhatsApp.'];
+    if ($inc = lines($t['includes'])) $qa[] = ["What is included in the $name?", list_sentence($inc, 12) . '.'];
+    if ($exc = lines($t['excludes'])) $qa[] = ["What is not included?", list_sentence($exc, 10) . '.'];
+    if ($bestTime) $qa[] = ['When is the best time to go' . ($t['dest_name'] ? ' to ' . $t['dest_name'] : '') . '?', rtrim($bestTime, '.') . '.'];
+    if ($t['tour_type']) $qa[] = ["Is this a group or private safari?", 'It runs as ' . mb_strtolower($t['tour_type']) . '. SkyTydes Safaris can also arrange it privately on your own dates.'];
+    $qa[] = ["How do I book the $name?", contact_answer()];
+    return $qa;
+}
+
+function destination_answers(array $d, array $tours): array
+{
+    $qa = [];
+    if ($d['region']) $qa[] = ['Where is ' . $d['name'] . '?', $d['name'] . ' is in ' . rtrim($d['region'], '.') . ', Kenya.'];
+    if ($d['best_time']) $qa[] = ['When is the best time to visit ' . $d['name'] . '?', rtrim($d['best_time'], '.') . '.'];
+    if ($d['summary']) $qa[] = ['What is ' . $d['name'] . ' known for?', strip_tags((string) $d['summary'])];
+    if ($tours) $qa[] = ['Which SkyTydes Safaris trips go to ' . $d['name'] . '?', list_sentence(array_map(fn($t) => $t['title'] . ((int) $t['duration_days'] ? ' (' . (int) $t['duration_days'] . ' days)' : ''), $tours)) . '.'];
+    $qa[] = ['How do I plan a trip to ' . $d['name'] . '?', contact_answer()];
+    return $qa;
+}
+
+function schema_faq(array $qa): array
+{
+    return ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn($x) => ['@type' => 'Question', 'name' => $x[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $x[1]]], $qa)];
+}
+
+/** Visible "Quick answers" block. */
+function answers_block(array $qa, string $heading = 'Quick answers'): string
+{
+    if (!$qa) return '';
+    $out = '<section class="qa" aria-labelledby="qa-h"><h2 class="h3" id="qa-h">' . h($heading) . '</h2><dl>';
+    foreach ($qa as $x) $out .= '<div><dt>' . h($x[0]) . '</dt><dd>' . h($x[1]) . '</dd></div>';
+    return $out . '</dl></section>';
 }
