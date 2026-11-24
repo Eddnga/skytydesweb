@@ -40,6 +40,7 @@ $groups = [
         ['tagline', 'text', 'Tagline', ''],
     ],
     'SEO & Google' => [
+        ['ga_id', 'text', 'Google Analytics Measurement ID', 'From Google Analytics → Admin → Data streams → your website, e.g. G-AB12CD34EF. Your own visits while logged in to the dashboard are not counted.'],
         ['google_verification', 'text', 'Google Search Console verification', 'In Search Console choose "HTML tag" and paste the whole tag or just the code here.'],
         ['bing_verification', 'text', 'Bing Webmaster verification', 'Optional. Paste the msvalidate.01 tag or code.'],
         ['og_image', 'image', 'Default share image', 'Shown when a page is shared on WhatsApp, Facebook or X and has no photo of its own. Use a landscape photo, 1200×630 px works best.'],

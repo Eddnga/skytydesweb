@@ -32,7 +32,7 @@ if ($slug !== '') {
     if (!$r) not_found();
     $desc = '';
     foreach ($t['fields'] as $f) if (in_array($f['type'], ['md', 'textarea'], true) && !empty($r[section_col($t, $f)])) { $desc = excerpt(strip_tags((string) $r[section_col($t, $f)]), 160); break; }
-    site_header($r['title'], ['active' => 'sec_' . $t['slug'], 'desc' => $desc ?: $r['title'] . ' — one of the ' . mb_strtolower($t['label']) . ' we arrange at SkyTydes Safaris, Nairobi. Ask us on WhatsApp.', 'image' => $imgCol ? $r[$imgCol] : null]);
+    site_header($r['title'], ['active' => 'sec_' . $t['slug'], 'desc' => $desc ?: $r['title'] . ' — one of the ' . mb_strtolower($t['label']) . ' we arrange at SkyTydes Safaris, Nairobi. Ask us on WhatsApp.', 'image' => $imgCol ? $r[$imgCol] : null, 'ga_item' => ['name' => $r['title'], 'category' => $t['label']]]);
     page_hero($r['title'], $t['one_label'], $imgCol ? $r[$imgCol] : null, '', [[$t['label'], $base]]);
     $facts = []; $blocks = []; $gallery = [];
     foreach ($t['fields'] as $f) {

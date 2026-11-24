@@ -96,6 +96,7 @@ function site_header(string $title, array $o = []): void
 <?php if ($gv): ?><meta name="google-site-verification" content="<?= h($gv) ?>"><?php endif; ?>
 <?php if ($bv): ?><meta name="msvalidate.01" content="<?= h($bv) ?>"><?php endif; ?>
 <?php foreach ($schema as $sc) echo json_ld($sc); ?>
+<?php if (($ga = ga_id()) && !current_user()): ?><script async src="https://www.googletagmanager.com/gtag/js?id=<?= h($ga) ?>"></script><script src="<?= asset('js/ga.js') ?>" data-ga="<?= h($ga) ?>" data-page-type="<?= h(ga_page_type()) ?>"<?php if (!empty($o['ga_item'])): ?> data-item-name="<?= h($o['ga_item']['name'] ?? '') ?>" data-item-category="<?= h($o['ga_item']['category'] ?? '') ?>" data-item-price="<?= h((string) ($o['ga_item']['price'] ?? '')) ?>" data-item-currency="<?= h($o['ga_item']['currency'] ?? 'KES') ?>"<?php endif; ?>></script><?php endif; ?>
 <meta name="theme-color" content="#023F0A">
 <link rel="icon" href="<?= asset('img/favicon-32.png') ?>" type="image/png" sizes="32x32">
 <link rel="icon" href="<?= asset('img/favicon-192.png') ?>" type="image/png" sizes="192x192">

@@ -74,10 +74,12 @@
     a.addEventListener('click', function (e) {
       if (!sheet || typeof sheet.showModal !== 'function') return; // fall back to the plain link
       e.preventDefault();
-      form.elements.src.value = a.dataset.src || 'general';
-      form.elements.id.value = a.dataset.id || '0';
-      form.elements.item.value = a.dataset.item || '';
-      form.elements.page.value = location.pathname;
+      // (form.elements.item is a built-in method, so look the fields up by name)
+      var set = function (n, v) { var el = form.querySelector('[name="' + n + '"]'); if (el) el.value = v; };
+      set('src', a.dataset.src || 'general');
+      set('id', a.dataset.id || '0');
+      set('item', a.dataset.item || '');
+      set('page', location.pathname);
       var item = $('#waItem');
       item.textContent = (['tour', 'destination', 'service', 'offer'].indexOf(a.dataset.src) > -1) ? a.dataset.item : '';
       item.hidden = !item.textContent;

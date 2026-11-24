@@ -57,6 +57,21 @@ function verification_code(string $key): string
     return preg_replace('/[^A-Za-z0-9_\-=]/', '', $v) ?? '';
 }
 
+/** Google Analytics 4 measurement ID (G-XXXXXXX), or '' when not set. Pasting the whole snippet works too. */
+function ga_id(): string
+{
+    return preg_match('/\bG-[A-Z0-9]{4,16}\b/', strtoupper(setting('ga_id')), $m) ? $m[0] : '';
+}
+
+/** What kind of page this is, for grouping in Analytics reports. */
+function ga_page_type(): string
+{
+    if (http_response_code() === 404) return 'not_found';
+    $p = basename((string) ($_SERVER['SCRIPT_NAME'] ?? 'index.php'), '.php');
+    return ['index' => 'home', 'tour' => 'tour', 'tours' => 'tour_list', 'destination' => 'destination', 'destinations' => 'destination_list',
+        'post' => 'blog_post', 'blog' => 'blog', 'section' => isset($_GET['slug']) ? 'section_item' : 'section_list', '404' => 'not_found'][$p] ?? $p;
+}
+
 function json_ld(array $data): string
 {
     return '<script type="application/ld+json">' . json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . '</script>' . "\n";
