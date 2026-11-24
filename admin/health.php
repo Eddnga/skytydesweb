@@ -10,7 +10,13 @@ if (is_post()) {
     if ($do === 'pretty') {
         $ok = check_pretty_urls();
         audit('pretty_check', 'settings', null, ['note' => $ok ? 'clean addresses on' : 'clean addresses not working']);
-        flash($ok ? 'ok' : 'error', $ok ? 'Clean web addresses work — pages now show as /tours instead of /tours.php.' : 'The server did not answer the clean-address test. Press "Restart container" in MyPanel, then test again.');
+        flash($ok ? 'ok' : 'error', $ok ? 'Clean web addresses work — pages now show as /tours instead of /tours.php.' : 'The server could not test itself. Open ' . abs_url('tours') . ' in a new tab: if the Tours page loads, use "Turn on anyway". If it shows an error, press "Restart container" in MyPanel and try again.');
+    }
+    if ($do === 'pretty_force') {
+        set_setting('pretty_urls', '1');
+        set_setting('pretty_checked_at', now());
+        audit('update', 'settings', null, ['changed' => ['clean web addresses turned on manually']]);
+        flash('ok', 'Clean web addresses are on. Open a few pages to make sure they load.');
     }
     if ($do === 'pretty_off') {
         set_setting('pretty_urls', '0');
@@ -145,6 +151,7 @@ admin_header('Site health', 'health');
   <div><b class="bad-n"><?= $score['bad'] ?></b><span>Needs fixing</span></div>
   <div class="health-actions">
     <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="do" value="pretty"><button class="btn ghost sm"><?= icon('globe', 16) ?> Test clean addresses</button></form>
+    <?php if (!pretty_on()): ?><form method="post" class="inline" data-confirm="Only do this if <?= h(rtrim($CONFIG['base_url'] ?? '', '/')) ?>/tours opens the Tours page. Turn clean addresses on?"><?= csrf_field() ?><input type="hidden" name="do" value="pretty_force"><button class="btn ghost sm">Turn on anyway</button></form><?php endif; ?>
     <?php if (pretty_on()): ?><form method="post" class="inline" data-confirm="Turn clean addresses off? Pages will show as /tours.php again."><?= csrf_field() ?><input type="hidden" name="do" value="pretty_off"><button class="btn ghost sm">Turn off</button></form><?php endif; ?>
     <a class="btn ghost sm" href="<?= url('admin/health.php') ?>">↻ Re-check</a>
   </div>

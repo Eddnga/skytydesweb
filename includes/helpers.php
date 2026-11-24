@@ -61,7 +61,8 @@ function pretty_redirect(): void
 }
 /**
  * Checks that the server understands the clean-URL rules (it asks itself for /tours).
- * Turns clean URLs on when it works, off when it doesn't.
+ * Tries the public address first, then the same address pointed at this machine
+ * (some hosts can't reach their own public IP from inside). Turns clean URLs on when it works.
  */
 function check_pretty_urls(): bool
 {
@@ -69,12 +70,18 @@ function check_pretty_urls(): bool
     $ok = false;
     $base = rtrim($CONFIG['base_url'] ?? '', '/');
     if ($base !== '' && function_exists('curl_init')) {
-        $ch = curl_init($base . '/tours');
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_FOLLOWLOCATION => false, CURLOPT_USERAGENT => 'SkyTydes-selfcheck']);
-        $body = (string) curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        $ok = $code === 200 && str_contains($body, 'class="nav"');
+        $host = (string) parse_url($base, PHP_URL_HOST);
+        $port = parse_url($base, PHP_URL_SCHEME) === 'https' ? 443 : 80;
+        foreach ([null, '127.0.0.1'] as $via) {
+            $ch = curl_init($base . '/tours');
+            $opt = [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_FOLLOWLOCATION => false, CURLOPT_USERAGENT => 'SkyTydes-selfcheck'];
+            if ($via) $opt[CURLOPT_RESOLVE] = ["$host:$port:$via"];
+            curl_setopt_array($ch, $opt);
+            $body = (string) curl_exec($ch);
+            $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($code === 200 && str_contains($body, 'class="nav"')) { $ok = true; break; }
+        }
     }
     set_setting('pretty_urls', $ok ? '1' : '0');
     set_setting('pretty_checked_at', now());
