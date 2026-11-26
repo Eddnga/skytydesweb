@@ -268,6 +268,8 @@ function site_footer(): void
       <label>Travellers<input name="travellers" type="number" min="1" max="200" placeholder="2"></label>
     </div>
     <label>Anything else? <span class="opt">(optional)</span><textarea name="message" rows="2" maxlength="500" placeholder="Budget, special requests, kids…"></textarea></label>
+    <label>Email <span class="opt">(optional — we'll email you a copy of your request)</span><input name="email" type="email" maxlength="190" autocomplete="email" placeholder="you@example.com"></label>
+    <label class="sheet-opt"><input type="checkbox" name="news" value="1"> Also send me safari offers &amp; news</label>
     <button class="btn wa block lg"><?= sicon('wa', 20) ?> Continue to WhatsApp</button>
     <p class="fine">You'll be taken to WhatsApp with your message ready to send. Nothing is booked until we confirm.</p>
   </form>

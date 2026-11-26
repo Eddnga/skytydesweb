@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -172,6 +172,15 @@ function upgrade_v7(): void
     }
 }
 
+/** Version 8: email address on WhatsApp leads. */
+function upgrade_v8(): void
+{
+    try {
+        db()->exec('ALTER TABLE leads ADD COLUMN email VARCHAR(190) NULL');
+    } catch (Throwable $e) {
+    }
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -199,6 +208,7 @@ function maybe_migrate(): void
         if ($v < 5) upgrade_v5();
         if ($v < 6) upgrade_v6();
         if ($v < 7) upgrade_v7();
+        if ($v < 8) upgrade_v8();
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

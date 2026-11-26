@@ -289,6 +289,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(83,161,2,.35);bor
 .sheet-item{font-weight:500;color:var(--lg);margin-bottom:22px}
 .sheet-x{position:absolute;right:16px;top:16px;background:var(--sand);border:0;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green)}
 .fine{font-size:13px;color:var(--muted);margin:14px 0 0;text-align:center}
+.sheet-opt{display:flex!important;align-items:center;gap:10px;font-size:14px;font-weight:400;margin:-4px 0 16px;cursor:pointer}
+.sheet-opt input{width:18px!important;height:18px;margin:0;accent-color:var(--green);flex-shrink:0}
+.sheet{overflow-y:auto}
 /* contact */
 .contact-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:70px;align-items:start}
 .contact-wa .btn{margin:10px 0 16px}

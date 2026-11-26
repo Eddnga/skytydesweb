@@ -32,10 +32,10 @@ if (input('export') === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="skytydes-leads-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['Date', 'Source', 'Item', 'Name', 'Travel date', 'Travellers', 'Message', 'Status', 'Page']);
+    fputcsv($out, ['Date', 'Source', 'Item', 'Name', 'Email', 'Travel date', 'Travellers', 'Message', 'Status', 'Page']);
     foreach (rows("SELECT * FROM leads $where ORDER BY created_at DESC", $params) as $l) {
         // prevent spreadsheet formula injection
-        $safe = array_map(fn($v) => preg_match('/^[=+\-@]/', (string) $v) ? "'" . $v : $v, [$l['created_at'], $l['source'], $l['item'], $l['name'], $l['travel_date'], $l['travellers'], $l['message'], $l['status'], $l['page']]);
+        $safe = array_map(fn($v) => preg_match('/^[=+\-@]/', (string) $v) ? "'" . $v : $v, [$l['created_at'], $l['source'], $l['item'], $l['name'], $l['email'] ?? '', $l['travel_date'], $l['travellers'], $l['message'], $l['status'], $l['page']]);
         fputcsv($out, $safe);
     }
     exit;
@@ -55,13 +55,13 @@ admin_header('WhatsApp leads', 'leads');
 <div class="card table-wrap">
 <?php if (!$list): ?><p class="empty">No leads yet.</p><?php else: ?>
 <table class="table">
-  <thead><tr><th>Date</th><th>Asked about</th><th>Name</th><th>Travel date</th><th>Travellers</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>Date</th><th>Asked about</th><th>Name &amp; email</th><th>Travel date</th><th>Travellers</th><th>Status</th><th></th></tr></thead>
   <tbody>
   <?php foreach ($list as $l): ?>
     <tr>
       <td data-l="Date" class="nowrap"><?= h(fdate($l['created_at'], 'j M Y, H:i')) ?></td>
       <td data-l="Asked about"><strong><?= h($l['item'] ?: ucfirst($l['source'])) ?></strong><br><span class="muted small"><?= h(ucfirst($l['source'])) ?><?= $l['message'] ? ' · ' . h(excerpt($l['message'], 80)) : '' ?></span></td>
-      <td data-l="Name"><?= h($l['name']) ?></td>
+      <td data-l="Name"><?= h($l['name']) ?><?php if (!empty($l['email'])): ?><br><a class="small" href="mailto:<?= h($l['email']) ?>"><?= h($l['email']) ?></a><?php endif; ?></td>
       <td data-l="Travel date"><?= h($l['travel_date']) ?></td>
       <td data-l="Travellers"><?= h($l['travellers']) ?></td>
       <td data-l="Status">

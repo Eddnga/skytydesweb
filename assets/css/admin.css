@@ -296,3 +296,4 @@ h3.sub{font-size:17px;margin:14px 0 2px}
 .bulk-progress{position:relative;height:30px;border-radius:999px;background:#EEF1EA;overflow:hidden}
 .bulk-progress i{position:absolute;inset:0 auto 0 0;width:0;background:var(--lg);transition:width .3s}
 .bulk-progress span{position:relative;display:block;text-align:center;line-height:30px;font-size:13px;font-weight:500}
+.tpl-tabs{margin-bottom:16px}
