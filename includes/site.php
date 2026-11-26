@@ -218,6 +218,8 @@ function site_footer(): void
     <form method="post" action="<?= url('subscribe.php') ?>" class="join-form">
       <?= csrf_field() ?><input type="hidden" name="back" value="<?= h($back) ?>">
       <div class="hp" aria-hidden="true"><input name="company" tabindex="-1" autocomplete="off"></div>
+      <label class="sr" for="joinName">First name</label>
+      <input id="joinName" name="name" maxlength="60" placeholder="First name" autocomplete="given-name">
       <label class="sr" for="joinEmail">Email address</label>
       <input id="joinEmail" type="email" name="email" required placeholder="Your email address" autocomplete="email">
       <button class="btn gold">Join</button>

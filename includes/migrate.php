@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 /** Tables added in version 2 (offers, hosts, newsletter). */
 function schema_v2(): array
@@ -149,6 +149,29 @@ function upgrade_v6(): void
     }
 }
 
+/** Version 7: email log and "welcome email sent" on subscribers. */
+function upgrade_v7(): void
+{
+    global $CONFIG;
+    $sql = "CREATE TABLE IF NOT EXISTS email_log (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        to_email VARCHAR(190) NOT NULL,
+        subject VARCHAR(200) NOT NULL,
+        template VARCHAR(40) NULL,
+        status VARCHAR(10) NOT NULL,
+        error VARCHAR(300) NULL,
+        created_at DATETIME NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+    try {
+        db()->exec(($CONFIG['db']['driver'] ?? 'mysql') === 'sqlite' ? to_sqlite($sql) : $sql);
+    } catch (Throwable $e) {
+    }
+    try {
+        db()->exec('ALTER TABLE subscribers ADD COLUMN welcomed_at DATETIME NULL');
+    } catch (Throwable $e) {
+    }
+}
+
 function to_sqlite(string $sql): string
 {
     $sql = preg_replace('/INT UNSIGNED AUTO_INCREMENT PRIMARY KEY/', 'INTEGER PRIMARY KEY AUTOINCREMENT', $sql);
@@ -175,6 +198,7 @@ function maybe_migrate(): void
         if ($v < 4) add_review_source_columns();
         if ($v < 5) upgrade_v5();
         if ($v < 6) upgrade_v6();
+        if ($v < 7) upgrade_v7();
         set_setting('db_version', (string) DB_VERSION);
     } catch (Throwable $e) {
         error_log('migration failed: ' . $e->getMessage());

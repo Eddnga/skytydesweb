@@ -56,6 +56,7 @@ if (is_post()) {
             add_review_source_columns();
             upgrade_v5();
             upgrade_v6();
+            upgrade_v7();
             seed_v2_defaults();
             set_setting('db_version', (string) DB_VERSION);
             insert('users', ['name' => $name, 'email' => $email, 'password_hash' => password_hash($pass, PASSWORD_DEFAULT), 'role' => 'superadmin', 'active' => 1, 'created_at' => now()]);

@@ -456,6 +456,8 @@ h1 em,h2 em,.h2 em{font-style:italic;color:var(--gold);font-weight:400}
 .join p{margin:0}
 .join-form{display:flex;gap:10px;flex-wrap:wrap;position:relative}
 .join-form input[type=email]{flex:1;min-width:200px;margin:0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:15px 22px}
+.join-form input[name=name]{flex:0 1 150px;min-width:120px;margin:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:15px 20px}
+@media (max-width:600px){.join-form input[name=name]{flex:1 1 100%}}
 .join-form input::placeholder{color:rgba(255,255,255,.5)}
 .join-msg{width:100%;margin:6px 0 0;font-size:14px}.join-msg.ok{color:#9BE06B}.join-msg.err{color:#FFB4A6}
 .foot .hp{position:absolute;left:-9999px}

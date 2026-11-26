@@ -30,6 +30,7 @@ function icon(string $name, int $size = 20): string
         'file' => '<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
         'tag' => '<path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
         'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+        'send' => '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
         'chart' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
         'pulse' => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
         'db' => '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
@@ -63,6 +64,7 @@ function admin_header(string $title, string $active = ''): void
         ['reviews.php', 'Reviews', 'quote', 'reviews', $pending],
         ['leads.php', 'WhatsApp leads', 'chat', 'leads', $newLeads],
         ['subscribers.php', 'Subscribers', 'mail', 'subscribers', (int) val('SELECT COUNT(*) FROM subscribers WHERE created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)])],
+        ['email.php', 'Emails', 'send', 'email'],
         ['settings.php', 'Site settings', 'cog', 'settings'],
     ]);
     if (is_admin($u)) {
