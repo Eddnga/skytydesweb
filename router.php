@@ -7,7 +7,7 @@ if (PHP_SAPI !== 'cli-server') {
 }
 $path = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $rel = ltrim($path, '/');
-$deny = ['#(^|/)\.(?!well-known/)#', '#^(includes|storage)(/|$)#', '#^install/(schema|seed)\.php$#', '#^uploads/docs/#',
+$deny = ['#(^|/)\.(?!well-known/)#', '#^(includes|storage)(/|$)#', '#^admin/_#', '#^install/(schema|seed)\.php$#', '#^uploads/docs/#',
     '#^uploads/.*\.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js|svg)$#i', '#^(config|config\.sample|router)\.php$#', '#\.(sqlite|log|lock|md|ya?ml|sql|zip|bak|env)$#i'];
 foreach ($deny as $re) {
     if (preg_match($re, $rel)) {

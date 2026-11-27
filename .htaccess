@@ -45,6 +45,7 @@ ErrorDocument 404 /404.php
   RewriteCond %{REQUEST_URI} !/\.well-known/
   RewriteRule (^|/)\. - [F,L]
   RewriteRule ^(includes|storage)(/|$) - [F,L]
+  RewriteRule ^admin/_ - [F,L]
   RewriteRule ^install/(schema|seed)\.php$ - [F,L]
   RewriteRule ^uploads/docs/ - [F,L]
   RewriteRule ^uploads/.*\.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js|svg)$ - [F,L,NC]

@@ -65,8 +65,8 @@ function admin_header(string $title, string $active = ''): void
         ['leads.php', 'WhatsApp leads', 'chat', 'leads', $newLeads],
         ['subscribers.php', 'Subscribers', 'mail', 'subscribers', (int) val('SELECT COUNT(*) FROM subscribers WHERE created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)])],
         ['email.php', 'Emails', 'send', 'email'],
-        ['settings.php', 'Site settings', 'cog', 'settings'],
     ]);
+    if (is_admin($u)) $nav[] = ['settings.php', 'Site settings', 'cog', 'settings'];
     if (is_admin($u)) {
         $nav[] = ['users.php', 'Users', 'users', 'users'];
         $nav[] = ['activity.php', 'Activity log', 'log', 'activity'];

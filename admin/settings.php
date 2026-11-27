@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/_init.php';
-$user = require_login();
+$user = require_role('admin'); // editors can't change the WhatsApp number, codes or contacts
 
 $groups = [
     'Contact details' => [

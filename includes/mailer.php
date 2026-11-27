@@ -342,11 +342,37 @@ function sample_enquiry(): array
     return ['item' => $t, 'travel_date' => 'Mid December', 'travellers' => '4', 'message' => 'Two adults and two kids (8 and 11).'];
 }
 
+/**
+ * Limits for emails that visitors can trigger, so nobody can use the website to
+ * flood someone's inbox: per address per day, and an overall hourly cap.
+ */
+const MAIL_PER_ADDRESS = ['welcome' => 1, 'enquiry' => 3]; // per 24 hours
+const MAIL_VISITOR_HOURLY_CAP = 60;
+
+function mail_allowed(string $email, string $template): bool
+{
+    $day = date('Y-m-d H:i:s', time() - 86400);
+    $mine = (int) val("SELECT COUNT(*) FROM email_log WHERE to_email = ? AND template = ? AND status = 'sent' AND created_at >= ?", [$email, $template, $day]);
+    $hour = (int) val("SELECT COUNT(*) FROM email_log WHERE template IN ('welcome', 'enquiry') AND status = 'sent' AND created_at >= ?", [date('Y-m-d H:i:s', time() - 3600)]);
+    $why = null;
+    if ($mine >= (MAIL_PER_ADDRESS[$template] ?? 1)) $why = 'Limit reached for this address today';
+    elseif ($hour >= MAIL_VISITOR_HOURLY_CAP) $why = 'Hourly sending limit reached';
+    if ($why) {
+        try {
+            insert('email_log', ['to_email' => mb_substr($email, 0, 190), 'subject' => '(not sent)', 'template' => $template, 'status' => 'skipped', 'error' => $why, 'created_at' => now()]);
+        } catch (Throwable $e) {
+        }
+        return false;
+    }
+    return true;
+}
+
 /** Sends the welcome email to a new subscriber (after the page has been answered). */
 function queue_welcome(string $email, ?string $name = null): void
 {
     if (!tpl_enabled('welcome') || !mail_ready()) return;
     after_response(function () use ($email, $name) {
+        if (!mail_allowed($email, 'welcome')) return;
         [$s, $h, $t] = render_email('welcome', $email, $name);
         $err = send_mail($email, $s, $h, $t, 'welcome');
         try {
@@ -361,6 +387,7 @@ function queue_enquiry(string $email, ?string $name, array $details): void
 {
     if (!tpl_enabled('enquiry') || !mail_ready()) return;
     after_response(function () use ($email, $name, $details) {
+        if (!mail_allowed($email, 'enquiry')) return;
         [$s, $h, $t] = render_email('enquiry', $email, $name, $details);
         send_mail($email, $s, $h, $t, 'enquiry', null, false);
     });

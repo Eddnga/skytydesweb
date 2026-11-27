@@ -14,6 +14,11 @@ if (is_post()) {
     redirect('admin/subscribers.php');
 }
 if (input('export') === 'csv') {
+    if (!is_admin($user)) {
+        audit('access_denied', 'page', null, ['page' => basename(__FILE__) . ' export', 'needs' => 'Admin']);
+        http_response_code(403);
+        exit('Only administrators can export personal data.');
+    }
     audit('export', 'subscribers', null, ['what' => 'subscriber list (CSV)', 'rows' => (int) val('SELECT COUNT(*) FROM subscribers')]);
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="skytydes-subscribers-' . date('Y-m-d') . '.csv"');
@@ -30,7 +35,7 @@ admin_header('Newsletter subscribers', 'subscribers');
 ?>
 <div class="toolbar">
   <p class="muted" style="margin:0"><strong><?= $total ?></strong> people have joined from the website. Export the list to use in Mailchimp, Brevo or Gmail.</p>
-  <a class="btn ghost sm" href="<?= url('admin/subscribers.php?export=csv') ?>">Export CSV</a>
+  <?php if (is_admin($user)): ?><a class="btn ghost sm" href="<?= url('admin/subscribers.php?export=csv') ?>">Export CSV</a><?php endif; ?>
 </div>
 <div class="card table-wrap">
 <?php if (!$list): ?><p class="empty">No subscribers yet. The sign-up box is in the website footer.</p><?php else: ?>

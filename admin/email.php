@@ -178,7 +178,7 @@ admin_header('Emails', 'email');
     <tbody>
     <?php foreach ($log as $l): ?>
       <tr><td data-l="When" class="nowrap small"><?= h(fdate($l['created_at'], 'j M, H:i')) ?></td><td data-l="To"><?= h($l['to_email']) ?></td><td data-l="Email" class="small"><?= h(['welcome' => 'Welcome', 'enquiry' => 'Booking request', 'test' => 'Test'][$l['template']] ?? '') ?><br><span class="muted"><?= h($l['subject']) ?></span></td>
-      <td data-l="Result"><?php if ($l['status'] === 'sent'): ?><span class="pill ok">Sent</span><?php else: ?><span class="pill warn">Failed</span><br><span class="small muted"><?= h((string) $l['error']) ?></span><?php endif; ?></td></tr>
+      <td data-l="Result"><?php if ($l['status'] === 'sent'): ?><span class="pill ok">Sent</span><?php elseif ($l['status'] === 'skipped'): ?><span class="pill">Not sent</span><br><span class="small muted"><?= h((string) $l['error']) ?></span><?php else: ?><span class="pill warn">Failed</span><br><span class="small muted"><?= h((string) $l['error']) ?></span><?php endif; ?></td></tr>
     <?php endforeach; ?>
     </tbody>
   </table><?php endif; ?>

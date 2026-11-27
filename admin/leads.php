@@ -29,6 +29,11 @@ $where = $f ? 'WHERE status = ?' : '';
 $params = $f ? [$f] : [];
 
 if (input('export') === 'csv') {
+    if (!is_admin($user)) {
+        audit('access_denied', 'page', null, ['page' => basename(__FILE__) . ' export', 'needs' => 'Admin']);
+        http_response_code(403);
+        exit('Only administrators can export personal data.');
+    }
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="skytydes-leads-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
@@ -50,7 +55,7 @@ admin_header('WhatsApp leads', 'leads');
     <a href="<?= url('admin/leads.php') ?>" class="<?= $f === '' ? 'on' : '' ?>">All</a>
     <?php foreach (['new', 'contacted', 'booked', 'closed'] as $s): ?><a href="<?= url('admin/leads.php?f=' . $s) ?>" class="<?= $f === $s ? 'on' : '' ?>"><?= ucfirst($s) ?> <b><?= (int) val('SELECT COUNT(*) FROM leads WHERE status = ?', [$s]) ?></b></a><?php endforeach; ?>
   </nav>
-  <a class="btn ghost sm" href="<?= url('admin/leads.php?export=csv' . ($f ? '&f=' . $f : '')) ?>">Export CSV</a>
+  <?php if (is_admin($user)): ?><a class="btn ghost sm" href="<?= url('admin/leads.php?export=csv' . ($f ? '&f=' . $f : '')) ?>">Export CSV</a><?php endif; ?>
 </div>
 <div class="card table-wrap">
 <?php if (!$list): ?><p class="empty">No leads yet.</p><?php else: ?>
